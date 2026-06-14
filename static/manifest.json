@@ -1,0 +1,76 @@
+{
+  "name": "PressureProof - Train Your English for High-Stakes Moments",
+  "short_name": "PressureProof",
+  "description": "Measure and train the gap between the English you know and the English you can use when it counts. Built for IT professionals, IELTS test-takers, and English speakers in high-stakes roles.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "any",
+  "lang": "en",
+  "dir": "ltr",
+  "theme_color": "#1E1B4B",
+  "background_color": "#1E1B4B",
+  "categories": ["education", "productivity", "health", "utilities"],
+  "icons": [
+    {"src": "/static/img/icons/icon-48.png", "sizes": "48x48", "type": "image/png", "purpose": "any"},
+    {"src": "/static/img/icons/icon-72.png", "sizes": "72x72", "type": "image/png", "purpose": "any"},
+    {"src": "/static/img/icons/icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any"},
+    {"src": "/static/img/icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any"},
+    {"src": "/static/img/icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any"},
+    {"src": "/static/img/icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any"},
+    {"src": "/static/img/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "/static/img/icons/icon-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any"},
+    {"src": "/static/img/icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any"},
+    {"src": "/static/img/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+    {"src": "/static/img/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ],
+  "screenshots": [
+    {
+      "src": "/static/img/screenshots/mobile-screenshot.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/static/img/screenshots/desktop-screenshot.png",
+      "sizes": "1366x768",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Dashboard",
+      "short_name": "Dashboard",
+      "url": "/dashboard",
+      "description": "View your readiness score and PGI trend",
+      "icons": [{"src": "/static/img/icons/icon-96.png", "sizes": "96x96", "type": "image/png"}]
+    },
+    {
+      "name": "Start Session",
+      "short_name": "Session",
+      "url": "/session/new",
+      "description": "Begin a training session",
+      "icons": [{"src": "/static/img/icons/icon-96.png", "sizes": "96x96", "type": "image/png"}]
+    },
+    {
+      "name": "SnapSpeak",
+      "short_name": "SnapSpeak",
+      "url": "/snapspeak",
+      "description": "Launch a 90-second speaking challenge",
+      "icons": [{"src": "/static/img/icons/icon-96.png", "sizes": "96x96", "type": "image/png"}]
+    },
+    {
+      "name": "My LSRC",
+      "short_name": "LSRC",
+      "url": "/lsrc",
+      "description": "View your linguistic stress response curve",
+      "icons": [{"src": "/static/img/icons/icon-96.png", "sizes": "96x96", "type": "image/png"}]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "protocol_handlers": [],
+  "edge_side_panel": {"preferred_width": 400}
+}

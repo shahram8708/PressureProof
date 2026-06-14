@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Login - PressureProof{% endblock %}
+
+{% block content %}
+<section class="admin-login-panel">
+    <h1 class="h4 mb-2">Admin Control Panel</h1>
+    <p class="text-secondary mb-4">Restricted access for authorized PressureProof operators.</p>
+
+    <form method="post" action="{{ url_for('admin.login_post') }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Admin email</label>
+            <input id="email" name="email" type="email" class="form-control" required autocomplete="email">
+        </div>
+
+        <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input id="password" name="password" type="password" class="form-control" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Sign in</button>
+    </form>
+
+    <hr>
+    <p class="small text-secondary mb-0">All activity is audited and traceable by account, action, and timestamp.</p>
+</section>
+{% endblock %}

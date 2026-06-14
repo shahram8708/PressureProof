@@ -1,0 +1,159 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Notifications - PressureProof Admin{% endblock %}
+
+{% block content %}
+<section>
+    <div class="admin-section-title mb-3">
+        <div>
+            <h1 class="h4 mb-1">Notifications</h1>
+            <p class="text-secondary mb-0">Sent: {{ total_sent }} | Open rate: {{ opened_rate }}%</p>
+        </div>
+    </div>
+
+    <div class="admin-card mb-3">
+        <h2 class="h6 mb-3">Send Bulk Notification</h2>
+        <form id="bulkNotificationForm" class="row g-2">
+            <div class="col-lg-3">
+                <label class="form-label" for="notification_type">Type</label>
+                <select id="notification_type" class="form-select" required>
+                    <option value="snapspeak reminder">SnapSpeak reminder</option>
+                    <option value="weekly report">Weekly report</option>
+                    <option value="custom">Custom message</option>
+                </select>
+            </div>
+            <div class="col-lg-3">
+                <label class="form-label" for="segment">Segment</label>
+                <select id="segment" class="form-select" required>
+                    <option value="all_users">All users</option>
+                    <option value="free_users">Free users</option>
+                    <option value="paid_users">Paid users</option>
+                    <option value="inactive_7_days">Inactive 7 days</option>
+                </select>
+            </div>
+            <div class="col-lg-4">
+                <label class="form-label" for="custom_message">Custom message</label>
+                <input id="custom_message" class="form-control" type="text" placeholder="Used for custom type">
+            </div>
+            <div class="col-lg-2 d-flex align-items-end">
+                <button class="btn btn-primary w-100" type="submit">Send</button>
+            </div>
+        </form>
+        <div id="bulkNotificationState" class="small text-secondary mt-2"></div>
+    </div>
+
+    <form method="get" class="admin-toolbar mb-3" action="{{ url_for('admin.notifications_index') }}">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <label class="form-label" for="type">Filter type</label>
+                <input id="type" class="form-control" type="text" name="type" value="{{ request.args.get('type', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="sent">Sent status</label>
+                <select id="sent" class="form-select" name="sent">
+                    <option value="" {% if not request.args.get('sent') %}selected{% endif %}>All</option>
+                    <option value="sent" {% if request.args.get('sent') == 'sent' %}selected{% endif %}>Sent</option>
+                    <option value="pending" {% if request.args.get('sent') == 'pending' %}selected{% endif %}>Pending</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="date_from">From date</label>
+                <input id="date_from" class="form-control" type="date" name="date_from" value="{{ request.args.get('date_from', '') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="date_to">To date</label>
+                <input id="date_to" class="form-control" type="date" name="date_to" value="{{ request.args.get('date_to', '') }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button class="btn btn-outline-primary" type="submit">Filter</button>
+                <a href="{{ url_for('admin.notifications_index') }}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="admin-table-wrap">
+        <div class="table-responsive">
+            <table class="table admin-table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Type</th>
+                        <th>Scheduled</th>
+                        <th>Sent</th>
+                        <th>Opened</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in notifications %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>
+                            {% if item.user %}
+                            <a href="{{ url_for('admin.users_detail', user_id=item.user.id) }}">{{ item.user.display_name or item.user.email }}</a>
+                            <div class="small text-secondary">{{ item.user.email }}</div>
+                            {% else %}
+                            User #{{ item.user_id }}
+                            {% endif %}
+                        </td>
+                        <td>{{ item.notification_type }}</td>
+                        <td>{{ item.scheduled_at | strftime('%d %b %Y %H:%M') if item.scheduled_at else '-' }}</td>
+                        <td>{{ item.sent_at | strftime('%d %b %Y %H:%M') if item.sent_at else '-' }}</td>
+                        <td>{{ 'Yes' if item.opened else 'No' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center py-4 text-secondary">No notification records.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+
+    document.getElementById("bulkNotificationForm")?.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const notificationType = document.getElementById("notification_type")?.value;
+        const segment = document.getElementById("segment")?.value;
+        const customMessage = document.getElementById("custom_message")?.value?.trim() || "";
+        const state = document.getElementById("bulkNotificationState");
+
+        state.textContent = "Sending...";
+
+        try {
+            const response = await fetch("{{ url_for('admin.notifications_bulk_send') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({
+                    notification_type: notificationType,
+                    segment: segment,
+                    custom_message: customMessage,
+                }),
+            });
+
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Unable to send notification");
+            }
+
+            if (payload.task_id) {
+                state.textContent = `Queued. Task ID: ${payload.task_id}`;
+            } else {
+                state.textContent = `Sent to ${payload.user_count || 0} users.`;
+            }
+
+            window.setTimeout(() => window.location.reload(), 700);
+        } catch (error) {
+            state.textContent = error.message || "Unable to send";
+        }
+    });
+</script>
+{% endblock %}

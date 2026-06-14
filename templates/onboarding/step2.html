@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Step 2 of 3 | PressureProof{% endblock %}
+
+{% block extra_css %}
+<meta name="csrf-token" content="{{ csrf_token_value }}">
+<style>
+    .baseline-shell {
+        max-width: 980px;
+    }
+
+    .baseline-panel {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: 1.25rem;
+    }
+
+    .instruction-card {
+        background: var(--color-primary);
+        color: #FFFFFF;
+        border-radius: 12px;
+        padding: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .recording-card {
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: #FFFFFF;
+        padding: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stage-prompt {
+        font-size: 1.1rem;
+        color: var(--color-primary);
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .timer-value {
+        font-size: 2.6rem;
+        line-height: 1;
+        font-weight: 700;
+        color: var(--color-accent);
+    }
+
+    .recording-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-weight: 600;
+        color: #B91C1C;
+    }
+
+    .recording-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #DC2626;
+        animation: pulseRecording 1.1s infinite;
+    }
+
+    @keyframes pulseRecording {
+        0% {
+            transform: scale(0.9);
+            opacity: 0.9;
+        }
+        70% {
+            transform: scale(1.2);
+            opacity: 0.3;
+        }
+        100% {
+            transform: scale(0.9);
+            opacity: 0.9;
+        }
+    }
+
+    #waveformContainer {
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: #FFFBEB;
+        min-height: 120px;
+        padding: 0.75rem;
+    }
+
+    .floating-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: rgba(17, 24, 39, 0.82);
+        color: #FFFFFF;
+        z-index: 4;
+        padding: 1.2rem;
+    }
+
+    .overlay-count {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--color-accent);
+        display: block;
+    }
+
+    .processing-overlay {
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: #FFFFFF;
+        padding: 1.25rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .baseline-panel {
+            padding: 1rem;
+        }
+
+        .timer-value {
+            font-size: 2.2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="container py-4 py-md-5 baseline-shell">
+    <div
+        id="baselineAssessmentApp"
+        class="baseline-panel"
+        data-prepared-prompt="{{ prepared_prompt|e }}"
+        data-spontaneous-prompt="{{ spontaneous_prompt|e }}"
+        data-submit-url="{{ baseline_submit_url }}"
+        data-status-base-url="{{ url_for('api.baseline_status', task_id='__TASK_ID__').replace('__TASK_ID__', '') }}"
+        data-step3-redirect="{{ url_for('onboarding.step3') }}"
+    >
+        <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small text-secondary">Step 2 of 3 - Your Baseline</span>
+                <span class="small text-secondary">66%</span>
+            </div>
+            <div class="progress" role="progressbar" aria-label="Onboarding progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="66" style="height: 0.75rem;">
+                <div class="progress-bar" style="width: 66%;"></div>
+            </div>
+        </div>
+
+        <div class="instruction-card mb-4">
+            This is not a test, it is a map. Speak naturally. There are no wrong answers. We need 3 to 4 minutes of your English in two conditions, prepared and spontaneous. Your microphone data never leaves our servers and is deleted after analysis.
+        </div>
+
+        <div id="permissionCard" class="recording-card mb-3">
+            <h2 class="h5 mb-2">Microphone permission</h2>
+            <p class="text-secondary mb-3">To measure your pressure profile accurately, we need access to your microphone for one baseline recording sequence.</p>
+            <button id="allowMicButton" type="button" class="btn btn-primary px-4">Allow microphone access</button>
+            <p id="permissionMessage" class="small text-secondary mt-3 mb-0">You can only continue once microphone access is granted.</p>
+        </div>
+
+        <div id="recordingCard" class="recording-card d-none mb-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-2">
+                <h2 id="stageTitle" class="h5 mb-0">Stage 1 of 2 - Prepared Speech</h2>
+                <div class="text-md-end">
+                    <div class="small text-secondary">Time remaining</div>
+                    <div id="countdownValue" class="timer-value">120</div>
+                </div>
+            </div>
+
+            <p class="text-secondary mb-1">Speak about this topic:</p>
+            <p id="stagePrompt" class="stage-prompt"></p>
+
+            <div id="waveformContainer" class="mb-3"></div>
+
+            <div id="recordingIndicator" class="recording-indicator d-none">
+                <span class="recording-dot" aria-hidden="true"></span>
+                <span>Recording</span>
+            </div>
+
+            <div id="countdownOverlay" class="floating-overlay d-none">
+                <div>
+                    <div class="h5 mb-2">Get ready...</div>
+                    <span id="countdownOverlayValue" class="overlay-count">3</span>
+                </div>
+            </div>
+
+            <div id="transitionOverlay" class="floating-overlay d-none">
+                <div>
+                    <div class="h4 mb-2">Great. One more.</div>
+                    <p class="mb-0">Now continue with your spontaneous speech sample.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="processingOverlay" class="processing-overlay d-none mb-3">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="spinner-border text-warning" role="status" aria-hidden="true"></div>
+                <div>
+                    <h3 class="h6 mb-1">Analyzing your speech...</h3>
+                    <p class="small text-secondary mb-0">This usually takes 30 to 60 seconds depending on your connection.</p>
+                </div>
+            </div>
+            <p id="processingStepText" class="small text-secondary mb-2">Preparing analysis...</p>
+            <div class="progress" role="progressbar" aria-label="Speech analysis progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="height: 0.65rem;">
+                <div id="processingProgressBar" class="progress-bar" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div id="recordingErrorCard" class="alert alert-warning d-none mb-0" role="alert">
+            <h3 class="h6">We could not complete your baseline recording.</h3>
+            <p id="recordingErrorMessage" class="mb-3"></p>
+            <button id="retryAssessmentButton" type="button" class="btn btn-primary">Try again</button>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/audio_recorder.js') }}"></script>
+<script src="{{ url_for('static', filename='js/waveform.js') }}"></script>
+<script src="{{ url_for('static', filename='js/onboarding_step2.js') }}"></script>
+{% endblock %}

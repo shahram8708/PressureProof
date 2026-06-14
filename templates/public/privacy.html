@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% set hide_sidebar = True %}
+{% set no_sidebar = True %}
+
+{% block title %}Privacy Policy{% endblock %}
+
+{% block content %}
+<section class="py-5 bg-white">
+    <div class="container" style="max-width: 900px;">
+        <h1 class="mb-4">Privacy Policy</h1>
+        <p class="text-secondary">Effective date: May 18, 2026</p>
+        <p>This Privacy Policy explains how PressureProof collects, uses, stores, and protects your information when you use our services. By creating an account or using the platform, you consent to the practices described below.</p>
+
+        <h2 class="h4 mt-5">1. Data we collect</h2>
+        <p>We collect account data such as your email address, encrypted password hash, profile details, and subscription status. We also collect speech related data required for core product functionality, including audio recordings, generated transcripts, LSRC scores, PGI records, drill performance events, and usage interactions such as session duration, completion patterns, and feature engagement.</p>
+
+        <h2 class="h4 mt-4">2. How we use your data</h2>
+        <p>We use your data to run speech analysis, calculate pressure related performance metrics, deliver personalized training paths, and provide progress tracking in your dashboard. We also use aggregated and de identified usage patterns to improve model quality, product reliability, and user experience design. We do not sell your personal data to advertisers.</p>
+
+        <h2 class="h4 mt-4">3. Data retention</h2>
+        <p>Raw audio uploads are deleted 72 hours after analysis unless you explicitly opt in to extended retention for support diagnostics. Transcripts, derived scores, and training history are retained while your account remains active so the platform can provide longitudinal progress tracking. If you delete your account, we delete or irreversibly anonymize retained data within a reasonable operational window, except where retention is legally required.</p>
+
+        <h2 class="h4 mt-4">4. Third party processors</h2>
+        <p>We use trusted infrastructure and payment partners to operate the service. Audio and related files may be stored using AWS S3. Subscription and payment processing is handled through Razorpay for eligible plans. These processors access only the data necessary to perform their services under contractual confidentiality and security obligations.</p>
+
+        <h2 class="h4 mt-4">5. Security controls</h2>
+        <p>We use encryption in transit, access controls, session protection, and secure credential handling practices to protect user data. No online service can guarantee absolute security, but we continuously improve safeguards and monitoring to reduce risk.</p>
+
+        <h2 class="h4 mt-4">6. Your rights</h2>
+        <p>Depending on your jurisdiction, you may have rights to access your data, request correction, request deletion, request data portability, and object to certain processing activities. You may also request account closure at any time. We verify identity before fulfilling rights requests.</p>
+
+        <h2 class="h4 mt-4">7. International transfers</h2>
+        <p>If your data is processed outside your country of residence, we apply contractual and technical safeguards designed to protect your information in accordance with applicable law.</p>
+
+        <h2 class="h4 mt-4">8. Contact us</h2>
+        <p>For privacy questions or rights requests, contact us at <a href="mailto:privacy@pressureproof.com">privacy@pressureproof.com</a> or <a href="mailto:hello@pressureproof.com">hello@pressureproof.com</a>.</p>
+    </div>
+</section>
+{% endblock %}

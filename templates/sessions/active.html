@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Active Session - PressureProof{% endblock %}
+{% block body_class %}session-active-body{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/session.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="session-runtime-shell">
+    <div class="session-top-bar">
+        <div class="session-top-left">
+            <a href="#" id="earlyExitLogoLink" class="pp-brand pp-brand--sm" aria-label="End session options">
+                <span class="pp-brand-mark" aria-hidden="true">
+                    <svg class="pp-brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                        <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.282.119l.032.012.005.002.002.001.001.001.002.001a.5.5 0 0 0 .374 0l.002-.001.001-.001.002-.001.005-.002.032-.012a5.85 5.85 0 0 0 .282-.119 7.88 7.88 0 0 0 .893-.533 10.725 10.725 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.856C9.552 1.29 8.531 1.067 8 1.067c-.531 0-1.552.223-2.662.524z"/>
+                        <path d="M10.854 5.146a.5.5 0 0 1 0 .708l-3.5 3.5a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7 8.293l3.146-3.147a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                </span>
+                <span class="pp-brand-text">PressureProof</span>
+            </a>
+        </div>
+        <div class="session-top-center small text-secondary">{{ session_type_display_name }}</div>
+        <div class="session-top-right"><span id="sessionTimer" class="session-timer">0:00</span></div>
+    </div>
+
+    <div class="session-prompt-area">
+        <p class="session-prompt-text mb-2">{{ session.prompt_text }}</p>
+        <p class="small text-secondary mb-0">Speak clearly and naturally. There are no wrong answers.</p>
+
+        <div class="session-recording-status">
+            <div class="d-flex align-items-center gap-2">
+                <span class="recording-dot" aria-hidden="true"></span>
+                <span class="small fw-semibold">Recording</span>
+            </div>
+            <div id="segmentIndicator" class="segment-indicator">Segment 1 of 2 - 3:00 remaining</div>
+
+            <div id="waveformContainer" class="waveform-container" aria-hidden="true">
+                <div class="waveform-bar"></div>
+                <div class="waveform-bar"></div>
+                <div class="waveform-bar"></div>
+                <div class="waveform-bar"></div>
+                <div class="waveform-bar"></div>
+                <div class="waveform-bar"></div>
+                <div class="waveform-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pressure-meter-wrapper" aria-label="Pressure meter">
+        <div class="pressure-meter-track">
+            <div id="pressureMeterFill" class="pressure-meter-fill"></div>
+        </div>
+        <div class="pressure-meter-label">Pressure</div>
+    </div>
+
+    <div id="segmentTransition" class="session-transition-overlay hidden" role="dialog" aria-live="assertive">
+        <div class="session-transition-card text-center">
+            <p class="mb-2 fs-4 text-white">Segment 1 complete. Well done and keep going.</p>
+            <p class="mb-0 text-white-50">Segment 2 starts in <span id="transitionCountdown">10</span>s</p>
+        </div>
+    </div>
+
+    {% include "components/session_injection_overlay.html" %}
+
+    <a href="#" id="earlyExitLink" class="session-early-exit-link">End session early.</a>
+
+    <div class="modal fade" id="earlyExitModal" tabindex="-1" aria-labelledby="earlyExitModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="earlyExitModalLabel">End this session?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Your progress so far will be saved and analyzed.</p>
+                    <label for="earlyExitReason" class="form-label">Reason</label>
+                    <select id="earlyExitReason" class="form-select">
+                        <option value="Too stressful at this intensity">Too stressful at this intensity</option>
+                        <option value="Technical issue with microphone">Technical issue with microphone</option>
+                        <option value="Not enough time right now">Not enough time right now</option>
+                        <option value="The prompt didn't suit my context">The prompt did not suit my context</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirmEarlyExitButton" class="btn btn-primary">End session</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sessionCompleteOverlay" class="session-complete-overlay hidden">
+        <svg width="72" height="72" viewBox="0 0 52 52" aria-hidden="true" class="mb-3">
+            <circle cx="26" cy="26" r="24" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.35"></circle>
+            <path d="M14 27l8 8 16-18" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                <animate attributeName="stroke-dasharray" from="0,60" to="60,0" dur="0.9s" fill="freeze"></animate>
+            </path>
+        </svg>
+        <h2 class="h4 text-white text-center mb-3">Session complete. Analyzing your speech now...</h2>
+        <div class="progress" style="width:min(420px, 80vw); height:10px;">
+            <div id="sessionCompleteProgress" class="progress-bar" role="progressbar" style="width:0%;" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const sessionCalibration = {{ calibration_payload | tojson | safe }};
+    const audioChunkUrl = "{{ chunk_upload_url }}";
+    const sessionCompleteUrl = "{{ session_complete_url }}";
+    const csrfToken = "{{ csrf_token() }}";
+    const sessionId = {{ session.id }};
+    const segmentDuration = {{ segment_duration }};
+    const transitionDuration = {{ transition_duration }};
+    const pivotQuestions = {{ pivot_questions | tojson | safe }};
+</script>
+<script src="{{ url_for('static', filename='js/audio_recorder.js') }}"></script>
+<script src="{{ url_for('static', filename='js/waveform.js') }}"></script>
+<script src="{{ url_for('static', filename='js/session_controller.js') }}"></script>
+{% endblock %}

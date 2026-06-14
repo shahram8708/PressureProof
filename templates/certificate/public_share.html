@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% if certificate and certificate_user %}
+    <meta property="og:title" content="{{ (certificate_user.display_name or certificate_user.email.split('@')[0]) }}'s PressureProof Certificate">
+    <meta property="og:description" content="Improved PGI from {{ certificate.baseline_pgi | round(2) if certificate.baseline_pgi is not none else 'n/a' }} to {{ certificate.current_pgi | round(2) if certificate.current_pgi is not none else 'n/a' }} - a {{ certificate.pgi_improvement_pct | round(2) if certificate.pgi_improvement_pct is not none else 'n/a' }}% improvement in English performance under pressure.">
+    <meta property="og:image" content="{{ url_for('static', filename='img/certificate_preview.png', _external=True) }}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:type" content="article">
+    {% endif %}
+    <title>{{ title or 'PressureProof Certificate' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}">
+    <style>
+        body {
+            background: #F9FAFB;
+            color: #111827;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+        }
+
+        .share-wrap {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .share-card {
+            width: 100%;
+            max-width: 880px;
+            background: #FFFFFF;
+            border-radius: 14px;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
+
+        .share-header {
+            background: #1E1B4B;
+            color: #FFFFFF;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .share-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .share-stat {
+            border: 1px solid #E5E7EB;
+            border-radius: 10px;
+            padding: 0.85rem;
+            text-align: center;
+            background: #FFFFFF;
+        }
+
+        .share-label {
+            font-size: 0.75rem;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.3rem;
+        }
+
+        .share-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1E1B4B;
+        }
+
+        @media (max-width: 767.98px) {
+            .share-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="share-wrap">
+        <div class="share-card">
+            {% if share_unavailable %}
+            <div class="p-5 text-center">
+                <h1 class="h3 mb-2">This certificate is not available.</h1>
+                <p class="text-secondary mb-4">The owner may have revoked the share link or the token is invalid.</p>
+                <a class="btn btn-primary" href="{{ url_for('public.index') }}">Visit PressureProof</a>
+            </div>
+            {% else %}
+            <div class="share-header">
+                <h1 class="h4 mb-1">PressureProof Certificate</h1>
+                <p class="mb-0">Verified performance improvement under pressure</p>
+            </div>
+            <div class="p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <h2 class="h2 mb-2" style="color:#1E1B4B;">{{ certificate_user.display_name or certificate_user.email.split('@')[0] }}</h2>
+                    <p class="text-secondary mb-0">has demonstrated measurable improvement in spoken English performance under cognitive stress.</p>
+                </div>
+
+                <div class="share-grid mb-4">
+                    <div class="share-stat"><div class="share-label">Baseline PGI</div><div class="share-value">{{ certificate.baseline_pgi | round(2) if certificate.baseline_pgi is not none else 'n/a' }}</div></div>
+                    <div class="share-stat"><div class="share-label">Final PGI</div><div class="share-value">{{ certificate.current_pgi | round(2) if certificate.current_pgi is not none else 'n/a' }}</div></div>
+                    <div class="share-stat"><div class="share-label">Improvement</div><div class="share-value">{{ certificate.pgi_improvement_pct | round(2) if certificate.pgi_improvement_pct is not none else 'n/a' }}%</div></div>
+                    <div class="share-stat"><div class="share-label">Strongest Dimension</div><div class="share-value">{{ certificate.strongest_dimension or 'n/a' }}</div></div>
+                    <div class="share-stat"><div class="share-label">Cohort Percentile</div><div class="share-value">{{ certificate.cohort_percentile | round(2) if certificate.cohort_percentile is not none else 'n/a' }}</div></div>
+                    <div class="share-stat"><div class="share-label">Active Period</div><div class="share-value">{{ certificate.months_active or 0 }} months</div></div>
+                </div>
+
+                <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 border-top pt-3">
+                    <div class="text-secondary small">Generated on {{ certificate.generated_at | strftime('%d %b %Y') }}</div>
+                    <a class="btn btn-primary" href="{{ url_for('public.index') }}">Learn more about PressureProof</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</body>
+</html>

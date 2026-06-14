@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}My Subscription - PressureProof{% endblock %}
+
+{% block content %}
+<section class="container-fluid">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card p-4">
+                <h1 class="h4 mb-3">Your Current Plan</h1>
+
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                    {% if subscription_status.tier == 'professional' %}
+                        <span class="badge" style="background:#F59E0B;color:#111827;">Professional</span>
+                    {% elif subscription_status.tier == 'pro_annual' %}
+                        <span class="badge" style="background:#1E1B4B;color:#FFFFFF;">Pro Annual</span>
+                    {% else %}
+                        <span class="badge border text-secondary">Free</span>
+                    {% endif %}
+                    <span class="fw-semibold">{{ subscription_status.plan_label }}</span>
+                </div>
+
+                {% if subscription_status.is_active %}
+                    <p class="mb-1">Active until {{ subscription_status.expires_at | strftime('%d %b %Y') if subscription_status.expires_at else 'n/a' }}</p>
+                    <p class="text-secondary mb-0">{{ subscription_status.days_remaining or 0 }} days remaining.</p>
+                {% elif subscription_status.is_trial and subscription_status.trial_days_remaining is not none and subscription_status.trial_days_remaining > 0 %}
+                    <p class="mb-0">Free trial, {{ subscription_status.trial_days_remaining }} days remaining.</p>
+                {% else %}
+                    <p class="mb-0 text-secondary">Free plan with limited access.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if usage_stats %}
+        <div class="col-12">
+            <div class="card p-4">
+                <h2 class="h5 mb-3">Usage in current billing period</h2>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="badge border text-dark">Sessions {{ usage_stats.sessions_completed }}</span>
+                    <span class="badge border text-dark">SnapSpeaks {{ usage_stats.snapspeaks_captured }}</span>
+                    <span class="badge border text-dark">Drills {{ usage_stats.drills_completed }}</span>
+                    <span class="badge border text-dark">LSRC Records {{ usage_stats.lsrc_generated }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if subscription_status.tier == 'free' %}
+        <div class="col-12">
+            <div class="card p-4">
+                <h2 class="h5 mb-3">Upgrade to unlock full training</h2>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold mb-1">{{ compact_plan_data.monthly.label }}</div>
+                            <div class="h4 mb-2">INR {{ compact_plan_data.monthly.price }}<span class="fs-6 text-secondary">/month</span></div>
+                            <a href="{{ url_for('upgrade.index') }}" class="btn btn-primary btn-sm">Choose Monthly</a>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold mb-1">{{ compact_plan_data.annual.label }}</div>
+                            <div class="h4 mb-2">INR {{ compact_plan_data.annual.price }}<span class="fs-6 text-secondary">/year</span></div>
+                            <a href="{{ url_for('upgrade.index') }}" class="btn btn-primary btn-sm">Choose Annual</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3"><a href="{{ url_for('upgrade.index') }}">See full feature comparison</a></div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if subscription_status.is_active %}
+        <div class="col-12">
+            <div class="card p-4 border-danger-subtle">
+                <h2 class="h5 mb-2">Cancel subscription</h2>
+                <p class="text-secondary mb-3">You can cancel any time. Access remains active until the current billing period ends and your data stays preserved.</p>
+                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#cancelModal">Cancel my subscription</button>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="col-12">
+            <div class="card p-4">
+                <h2 class="h5 mb-3">Payment history</h2>
+                {% if payment_history %}
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-2">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Plan</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in payment_history %}
+                            <tr>
+                                <td>{{ item.date }}</td>
+                                <td>INR {{ item.amount }}</td>
+                                <td>{{ item.plan }}</td>
+                                <td>{{ item.status }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="mb-2 text-secondary">No paid invoice found for this account yet.</p>
+                {% endif %}
+                <p class="small text-secondary mb-0">Full payment history available on request via support.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if subscription_status.is_active %}
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title h5">Are you sure you want to cancel?</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Cancelling will move your account to free tier at the end of this billing period. You will lose unlimited sessions, daily SnapSpeak, and certificate access. Your data remains preserved.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Keep my subscription</button>
+                <form method="post" action="{{ url_for('upgrade.cancel') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-secondary">Yes, cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

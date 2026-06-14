@@ -1,0 +1,215 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Settings - PressureProof Admin{% endblock %}
+
+{% block content %}
+<section>
+    <div class="admin-section-title mb-3">
+        <h1 class="h4 mb-0">System Settings</h1>
+        <div class="text-secondary small">Super-admin controls for feature flags and operator access.</div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-7">
+            <div class="admin-card h-100">
+                <h2 class="h6 mb-3">Feature Flags</h2>
+                <form id="featureFlagsForm">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="snapspeak_enabled" {% if feature_flags.snapspeak_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="snapspeak_enabled">SnapSpeak enabled</label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="new_registrations_enabled" {% if feature_flags.new_registrations_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="new_registrations_enabled">New registrations enabled</label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="certificate_generation_enabled" {% if feature_flags.certificate_generation_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="certificate_generation_enabled">Certificate generation enabled</label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="maintenance_mode" {% if feature_flags.maintenance_mode %}checked{% endif %}>
+                        <label class="form-check-label" for="maintenance_mode">Maintenance mode</label>
+                    </div>
+
+                    <button class="btn btn-primary" type="submit">Save feature flags</button>
+                    <span id="featureFlagsState" class="small text-secondary ms-2"></span>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="admin-card h-100">
+                <h2 class="h6 mb-3">Task Schedules</h2>
+                <div class="table-responsive">
+                    <table class="table admin-table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Schedule Key</th>
+                                <th>Task</th>
+                                <th>Last Run</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for schedule_key, schedule_value in celery_schedule.items() %}
+                            {% set run_key = 'last_' + schedule_key.replace('-', '_') %}
+                            {% if schedule_key == 'daily-audio-cleanup' %}
+                                {% set run_key = 'last_audio_cleanup' %}
+                            {% elif schedule_key == 'nightly-cohort-rebuild' %}
+                                {% set run_key = 'last_cohort_rebuild' %}
+                            {% elif schedule_key == 'weekly-pgi-recalculation' %}
+                                {% set run_key = 'last_weekly_pgi_recalculation' %}
+                            {% endif %}
+                            <tr>
+                                <td>{{ schedule_key }}</td>
+                                <td>{{ schedule_value['task'] }}</td>
+                                <td>{{ last_run.get(run_key, 'n/a') or 'n/a' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-secondary text-center">No scheduler entries configured.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-5">
+            <div class="admin-card h-100">
+                <h2 class="h6 mb-3">Create Admin User</h2>
+                <form id="addAdminForm">
+                    <div class="mb-2">
+                        <label class="form-label" for="new_admin_email">Email</label>
+                        <input id="new_admin_email" class="form-control" type="email" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label" for="new_admin_name">Full name</label>
+                        <input id="new_admin_name" class="form-control" type="text" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="new_admin_role">Role</label>
+                        <select id="new_admin_role" class="form-select" required>
+                            <option value="admin">Admin</option>
+                            <option value="support">Support</option>
+                            <option value="analyst">Analyst</option>
+                            <option value="super_admin">Super Admin</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Create admin</button>
+                    <div id="addAdminState" class="small text-secondary mt-2"></div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="admin-table-wrap">
+                <div class="p-3 border-bottom">
+                    <h2 class="h6 mb-0">Admin Users</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table admin-table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Active</th>
+                                <th>Last Login</th>
+                                <th>Failed Attempts</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in admin_users %}
+                            <tr>
+                                <td>{{ item.id }}</td>
+                                <td>{{ item.full_name }}</td>
+                                <td>{{ item.email }}</td>
+                                <td>{{ item.role }}</td>
+                                <td>{{ 'Yes' if item.is_active else 'No' }}</td>
+                                <td>{{ item.last_login_at | strftime('%d %b %Y %H:%M') if item.last_login_at else 'Never' }}</td>
+                                <td>{{ item.failed_login_attempts }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" class="text-center py-4 text-secondary">No admin users found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+
+    document.getElementById("featureFlagsForm")?.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const state = document.getElementById("featureFlagsState");
+        state.textContent = "Saving...";
+
+        const payload = {
+            snapspeak_enabled: document.getElementById("snapspeak_enabled")?.checked,
+            new_registrations_enabled: document.getElementById("new_registrations_enabled")?.checked,
+            certificate_generation_enabled: document.getElementById("certificate_generation_enabled")?.checked,
+            maintenance_mode: document.getElementById("maintenance_mode")?.checked,
+        };
+
+        try {
+            const response = await fetch("{{ url_for('admin.settings_feature_flags') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.error || "Unable to save flags");
+            }
+            state.textContent = "Feature flags updated.";
+        } catch (error) {
+            state.textContent = error.message || "Unable to save";
+        }
+    });
+
+    document.getElementById("addAdminForm")?.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const state = document.getElementById("addAdminState");
+        state.textContent = "Creating...";
+
+        const payload = {
+            email: document.getElementById("new_admin_email")?.value?.trim(),
+            full_name: document.getElementById("new_admin_name")?.value?.trim(),
+            role: document.getElementById("new_admin_role")?.value,
+        };
+
+        try {
+            const response = await fetch("{{ url_for('admin.settings_add_admin') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.error || "Unable to create admin");
+            }
+
+            state.innerHTML = `Created admin #${result.admin_id}. Temporary password: <strong>${result.temporary_password}</strong>`;
+            window.setTimeout(() => window.location.reload(), 1500);
+        } catch (error) {
+            state.textContent = error.message || "Unable to create admin";
+        }
+    });
+</script>
+{% endblock %}

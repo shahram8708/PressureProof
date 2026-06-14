@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Upgrade to Professional - PressureProof{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pp-upgrade-card {
+        border-top: 3px solid #F59E0B;
+    }
+
+    .pp-plan-price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1E1B4B;
+        line-height: 1;
+    }
+
+    .pp-most-popular {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        background: #F59E0B;
+        color: #111827;
+        border-radius: 999px;
+        padding: 0.3rem 0.65rem;
+        font-size: 0.74rem;
+        font-weight: 600;
+    }
+
+    .pp-trial-alert {
+        background: #FFFBEB;
+        border: 1px solid #FCD34D;
+        color: #92400E;
+    }
+
+    .pp-check {
+        color: #F59E0B;
+        font-weight: 700;
+    }
+
+    .pp-dash {
+        color: #9CA3AF;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="container-fluid">
+    <div class="row g-4">
+        {% if subscription_status and subscription_status.is_active %}
+        <div class="col-12">
+            <div class="card p-4">
+                <h1 class="h4 mb-2">You are already on the Professional plan.</h1>
+                <p class="text-secondary mb-2">{{ subscription_status.plan_label }} active until {{ subscription_status.expires_at | strftime('%d %b %Y') if subscription_status.expires_at else 'n/a' }}.</p>
+                <a href="{{ url_for('profile.subscription') }}" class="btn btn-outline-primary">Manage subscription</a>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if current_user.is_authenticated and pgi_hook %}
+        <div class="col-12">
+            <div class="card pp-upgrade-card p-4">
+                <h2 class="h5 mb-1">Your progress so far.</h2>
+                <div style="height: 88px; position: relative;" class="mb-3">
+                    <canvas id="upgradeSparkline"></canvas>
+                </div>
+                <p class="mb-0">You have already reduced your PGI from {{ pgi_hook.baseline | round(1) }} to {{ pgi_hook.current | round(1) }}. Do not lose this momentum.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if subscription_status and subscription_status.is_trial and subscription_status.trial_days_remaining is not none and subscription_status.trial_days_remaining <= 3 %}
+        <div class="col-12">
+            <div class="alert pp-trial-alert mb-0">
+                Your free trial {% if subscription_status.trial_days_remaining > 0 %}expires in {{ subscription_status.trial_days_remaining }} days{% else %}has ended{% endif %}. Upgrade to keep your full training program.
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="col-12">
+            <div class="card p-4">
+                <h2 class="h5 mb-3">Free vs Professional</h2>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th class="text-center">Free</th>
+                                <th class="text-center">Professional</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Sessions per week</td><td class="text-center">1</td><td class="text-center">Unlimited</td></tr>
+                            <tr><td>Stress injection types</td><td class="text-center">Basic</td><td class="text-center">All 4 types</td></tr>
+                            <tr><td>SnapSpeak per day</td><td class="text-center">3 per week</td><td class="text-center">Unlimited daily</td></tr>
+                            <tr><td>LSRC history</td><td class="text-center">4 weeks</td><td class="text-center">Full history</td></tr>
+                            <tr><td>PGI updates</td><td class="text-center">Weekly</td><td class="text-center">Daily</td></tr>
+                            <tr><td>Recovery Drill library</td><td class="text-center"><span class="pp-dash">&mdash;</span></td><td class="text-center"><span class="pp-check">&#10003;</span></td></tr>
+                            <tr><td>Cohort benchmarking</td><td class="text-center"><span class="pp-dash">&mdash;</span></td><td class="text-center"><span class="pp-check">&#10003;</span></td></tr>
+                            <tr><td>Calendar integration</td><td class="text-center"><span class="pp-dash">&mdash;</span></td><td class="text-center">Phase 2</td></tr>
+                            <tr><td>Pressure Certificate</td><td class="text-center"><span class="pp-dash">&mdash;</span></td><td class="text-center">Yes at 6 months</td></tr>
+                            <tr><td>Email progress reports</td><td class="text-center"><span class="pp-dash">&mdash;</span></td><td class="text-center">Weekly</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card p-4 h-100">
+                        <h3 class="h5 mb-2">Professional Monthly</h3>
+                        <div class="pp-plan-price">INR 799<span class="fs-6 fw-medium text-secondary">/month</span></div>
+                        <p class="text-secondary mt-2 mb-4">Cancel anytime</p>
+                        <button class="btn btn-primary" id="monthlyBtn">Subscribe Monthly</button>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card p-4 h-100 position-relative">
+                        <div class="pp-most-popular">Most Popular</div>
+                        <h3 class="h5 mb-2">Pro Annual</h3>
+                        <div class="pp-plan-price">INR 6,499<span class="fs-6 fw-medium text-secondary">/year</span></div>
+                        <p class="text-secondary mt-2 mb-4">Save INR 1,089 equivalent to 1.4 months free</p>
+                        <button class="btn btn-primary" id="annualBtn">Subscribe Annually</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <h2 class="h5 mb-3">What users say</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <article class="testimonial-card h-100">
+                        <div class="testimonial-avatar">VS</div>
+                        <h3 class="h6 mt-3 mb-1">Vikram S.</h3>
+                        <p class="text-secondary mb-3">IT Consultant, Pune</p>
+                        <p class="fst-italic mb-0">After 8 weeks I stopped dreading client calls. My PGI moved from 38 to 19.</p>
+                    </article>
+                </div>
+                <div class="col-md-4">
+                    <article class="testimonial-card h-100">
+                        <div class="testimonial-avatar">AM</div>
+                        <h3 class="h6 mt-3 mb-1">Ana M.</h3>
+                        <p class="text-secondary mb-3">IELTS Applicant, Bucharest</p>
+                        <p class="fst-italic mb-0">I finally understood why test day performance dropped. Focused training fixed it.</p>
+                    </article>
+                </div>
+                <div class="col-md-4">
+                    <article class="testimonial-card h-100">
+                        <div class="testimonial-avatar">RK</div>
+                        <h3 class="h6 mt-3 mb-1">Rajesh K.</h3>
+                        <p class="text-secondary mb-3">Customer Success Lead, Hyderabad</p>
+                        <p class="fst-italic mb-0">SnapSpeak kept me honest. Unscheduled speech now feels almost as stable as prepared speech.</p>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/pgi_chart.js') }}"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+    const pgiTrendData = {{ pgi_trend_data | tojson | safe }};
+    const isAuthenticated = {{ 'true' if current_user.is_authenticated else 'false' }};
+
+    (function initSparkline() {
+        if (Array.isArray(pgiTrendData) && pgiTrendData.length > 0 && typeof window.initSparklineChart === "function") {
+            window.initSparklineChart("upgradeSparkline", pgiTrendData);
+        }
+    })();
+
+    async function startCheckout(plan, buttonId) {
+        const button = document.getElementById(buttonId);
+        if (!button) {
+            return;
+        }
+
+        if (!isAuthenticated) {
+            window.location.href = "{{ url_for('auth.login_get', next=url_for('upgrade.index')) }}";
+            return;
+        }
+
+        const originalLabel = button.textContent;
+        button.disabled = true;
+        button.textContent = "Preparing checkout";
+
+        try {
+            const checkoutResponse = await fetch("{{ url_for('upgrade.checkout') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({ plan }),
+            });
+
+            const orderData = await checkoutResponse.json();
+            if (!checkoutResponse.ok) {
+                throw new Error(orderData.error || "Unable to initialize checkout");
+            }
+
+            const options = {
+                key: orderData.razorpay_key_id,
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: "PressureProof",
+                description: plan === "annual" ? "Pro Annual" : "Professional Monthly",
+                order_id: orderData.order_id,
+                handler: async function (response) {
+                    const webhookResponse = await fetch("{{ url_for('upgrade.webhook') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": csrfToken,
+                        },
+                        credentials: "same-origin",
+                        body: JSON.stringify({
+                            plan: plan,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                        }),
+                    });
+
+                    if (!webhookResponse.ok) {
+                        const err = await webhookResponse.json();
+                        throw new Error(err.error || "Payment verification failed");
+                    }
+
+                    window.location.href = "{{ url_for('dashboard.index') }}";
+                },
+                prefill: {
+                    name: orderData.user_name,
+                    email: orderData.user_email,
+                },
+                theme: {
+                    color: "#1E1B4B",
+                },
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } catch (error) {
+            alert(error.message || "Unable to complete checkout");
+        } finally {
+            button.disabled = false;
+            button.textContent = originalLabel;
+        }
+    }
+
+    document.getElementById("monthlyBtn")?.addEventListener("click", function () {
+        startCheckout("monthly", "monthlyBtn");
+    });
+
+    document.getElementById("annualBtn")?.addEventListener("click", function () {
+        startCheckout("annual", "annualBtn");
+    });
+</script>
+{% endblock %}

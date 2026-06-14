@@ -1,0 +1,455 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} - PressureProof Admin{% endblock %}
+
+{% block content %}
+<section>
+    <div class="admin-section-title mb-3">
+        <div>
+            <h1 class="h4 mb-1">{{ user.display_name or user.email }}</h1>
+            <p class="text-secondary mb-0">User #{{ user.id }} | {{ user.email }}</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            {% if admin_user.has_permission('edit_users') %}
+            <a class="btn btn-outline-primary" href="{{ url_for('admin.users_edit_get', user_id=user.id) }}">Edit Profile</a>
+            {% endif %}
+            {% if admin_user.role == 'super_admin' %}
+            <a class="btn btn-outline-success" href="{{ url_for('admin.users_impersonate', user_id=user.id) }}">Impersonate</a>
+            {% endif %}
+            <a class="btn btn-outline-secondary" href="{{ url_for('admin.users_list') }}">Back to Users</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-8">
+            <div class="admin-card h-100">
+                <h2 class="h6 mb-3">Profile Snapshot</h2>
+                <div class="row g-3">
+                    <div class="col-md-4"><div class="small text-secondary">Tier</div><div class="fw-semibold">{{ user.subscription_tier }}</div></div>
+                    <div class="col-md-4"><div class="small text-secondary">Created</div><div class="fw-semibold">{{ user.created_at | strftime('%d %b %Y') }}</div></div>
+                    <div class="col-md-4"><div class="small text-secondary">Last Login</div><div class="fw-semibold">{{ user.last_login_at | strftime('%d %b %Y %H:%M') if user.last_login_at else 'Never' }}</div></div>
+                    <div class="col-md-4"><div class="small text-secondary">Country</div><div class="fw-semibold">{{ user.country or 'Unknown' }}</div></div>
+                    <div class="col-md-4"><div class="small text-secondary">L1 Language</div><div class="fw-semibold">{{ user.l1_language or 'Unknown' }}</div></div>
+                    <div class="col-md-4"><div class="small text-secondary">Context</div><div class="fw-semibold">{{ user.professional_context or 'Unknown' }}</div></div>
+                    <div class="col-md-4"><div class="small text-secondary">Email Verified</div><div class="fw-semibold">{{ 'Yes' if user.email_verified else 'No' }}</div></div>
+                    <div class="col-md-4"><div class="small text-secondary">Onboarding Complete</div><div class="fw-semibold">{{ 'Yes' if user.onboarding_complete else 'No' }}</div></div>
+                    <div class="col-md-4"><div class="small text-secondary">SnapSpeak Opt-In</div><div class="fw-semibold">{{ 'Yes' if user.snapspeak_opted_in else 'No' }}</div></div>
+                </div>
+
+                {% if user.subscription_expires_at %}
+                <hr>
+                <div class="small text-secondary">Subscription expires at</div>
+                <div class="fw-semibold">{{ user.subscription_expires_at | strftime('%d %b %Y %H:%M') }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="admin-card h-100">
+                <h2 class="h6 mb-3">Failure Mode</h2>
+                {% if failure_mode %}
+                    <p class="mb-1"><strong>{{ failure_mode.mode_label }}</strong></p>
+                    <p class="text-secondary mb-2">{{ failure_mode.mode_description }}</p>
+                    <div class="small">Primary: <strong>{{ failure_mode.primary_dimension }}</strong></div>
+                    <div class="small">Secondary: <strong>{{ failure_mode.secondary_dimension or 'n/a' }}</strong></div>
+                    <div class="small">Confidence: <strong>{{ failure_mode.confidence_label }} ({{ (failure_mode.confidence_score * 100) | round(0) }}%)</strong></div>
+                    <div class="small text-secondary">Updated {{ failure_mode.last_updated | strftime('%d %b %Y') }}</div>
+                {% else %}
+                    <div class="admin-empty">No failure mode record yet.</div>
+                {% endif %}
+
+                <hr>
+                <h3 class="h6 mb-2">Certificate</h3>
+                {% if certificate %}
+                    <div class="small">Generated: <strong>{{ certificate.generated_at | strftime('%d %b %Y') }}</strong></div>
+                    <div class="small">Improvement: <strong>{{ certificate.pgi_improvement_pct | round(2) if certificate.pgi_improvement_pct is not none else 'n/a' }}%</strong></div>
+                    <div class="small">Public share: <strong>{{ 'Enabled' if certificate.is_public else 'Disabled' }}</strong></div>
+                    {% if certificate.share_url %}
+                    <a class="btn btn-sm btn-outline-primary mt-2" href="{{ certificate.share_url }}" target="_blank" rel="noopener">Open Public Share</a>
+                    {% endif %}
+                {% else %}
+                    <div class="admin-empty">No certificate generated.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if admin_user.has_permission('manage_subscriptions') %}
+    <div class="admin-card mb-3">
+        <h2 class="h6 mb-3">Subscription Controls</h2>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <button class="btn btn-sm btn-primary" onclick="subscriptionAction('upgrade','monthly')">Upgrade Monthly</button>
+            <button class="btn btn-sm btn-primary" onclick="subscriptionAction('upgrade','annual')">Upgrade Annual</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="subscriptionAction('downgrade')">Downgrade to Free</button>
+            <div class="input-group" style="max-width:220px;">
+                <input id="extendDays" class="form-control form-control-sm" type="number" min="1" value="30" placeholder="Days">
+                <button class="btn btn-sm btn-outline-primary" type="button" onclick="extendSubscription()">Extend</button>
+            </div>
+            <span id="subscriptionActionState" class="small text-secondary"></span>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <div class="admin-card h-100">
+                <h2 class="h6 mb-2">PGI Trend (12 weeks)</h2>
+                <div class="admin-chart-wrap">
+                    <canvas id="pgiTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="admin-card h-100">
+                <h2 class="h6 mb-2">LSRC Radar</h2>
+                {% if radar_data.has_data %}
+                <div class="admin-chart-wrap">
+                    <canvas id="lsrcRadarChart"></canvas>
+                </div>
+                {% else %}
+                <div class="admin-empty">Not enough LSRC data to render radar view.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <div class="admin-card h-100">
+                <h2 class="h6 mb-3">Admin Notes</h2>
+                {% if admin_user.has_permission('add_user_notes') %}
+                <form id="noteForm" class="mb-3">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <select id="noteType" class="form-select form-select-sm">
+                                <option value="general">General</option>
+                                <option value="support">Support</option>
+                                <option value="billing">Billing</option>
+                                <option value="technical">Technical</option>
+                                <option value="risk">Risk</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <input id="noteText" class="form-control form-control-sm" type="text" placeholder="Write a note for this user" required>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-primary mt-2" type="submit">Add note</button>
+                    <span id="noteState" class="small text-secondary ms-2"></span>
+                </form>
+                {% endif %}
+
+                <div class="table-responsive" style="max-height: 260px;">
+                    <table class="table admin-table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>When</th>
+                                <th>Type</th>
+                                <th>Admin</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in admin_notes %}
+                            <tr>
+                                <td>{{ item.created_at | strftime('%d %b %H:%M') }}</td>
+                                <td>{{ item.note_type }}</td>
+                                <td>{{ item.admin.full_name if item.admin else item.admin_id }}</td>
+                                <td>{{ item.note_text }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-secondary py-3">No admin notes yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="admin-card h-100">
+                <h2 class="h6 mb-3">Push and Notification Activity</h2>
+                <div class="small text-secondary mb-2">Push subscriptions: {{ push_subscriptions | length }}</div>
+                <div class="table-responsive" style="max-height: 260px;">
+                    <table class="table admin-table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Scheduled</th>
+                                <th>Sent</th>
+                                <th>Opened</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in notification_logs[:50] %}
+                            <tr>
+                                <td>{{ item.notification_type }}</td>
+                                <td>{{ item.scheduled_at | strftime('%d %b %H:%M') if item.scheduled_at else '-' }}</td>
+                                <td>{{ item.sent_at | strftime('%d %b %H:%M') if item.sent_at else '-' }}</td>
+                                <td>{{ 'Yes' if item.opened else 'No' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-secondary py-3">No notification activity.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-12">
+            <div class="admin-table-wrap">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h2 class="h6 mb-0">Training Sessions</h2>
+                    <span class="small text-secondary">{{ sessions | length }} total</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table admin-table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Injection</th>
+                                <th>Status</th>
+                                <th>Early Exit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sessions[:50] %}
+                            <tr>
+                                <td>{{ item.id }}</td>
+                                <td>{{ item.created_at | strftime('%d %b %Y %H:%M') }}</td>
+                                <td>{{ item.session_type }}</td>
+                                <td>{{ item.stress_injection_type }} ({{ item.stress_injection_intensity | round(2) }})</td>
+                                <td>{{ item.status }}</td>
+                                <td>{{ item.early_exit_reason or ('Yes' if item.early_exit else 'No') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center text-secondary py-3">No sessions recorded.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="admin-table-wrap">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h2 class="h6 mb-0">SnapSpeak Records</h2>
+                    <span class="small text-secondary">{{ snapspeaks | length }} total</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table admin-table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Captured</th>
+                                <th>Prompt</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in snapspeaks[:50] %}
+                            <tr>
+                                <td>{{ item.id }}</td>
+                                <td>{{ item.captured_at | strftime('%d %b %Y %H:%M') }}</td>
+                                <td>{{ item.short_prompt }}</td>
+                                <td>{{ item.status }}</td>
+                                <td>{{ item.duration_seconds or '-' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-secondary py-3">No SnapSpeak records.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="admin-table-wrap">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h2 class="h6 mb-0">PGI Weekly Records</h2>
+                    <span class="small text-secondary">{{ pgi_records | length }} total</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table admin-table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Week Start</th>
+                                <th>PGI</th>
+                                <th>Prepared</th>
+                                <th>Spontaneous</th>
+                                <th>Sessions</th>
+                                <th>SnapSpeaks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in pgi_records %}
+                            <tr>
+                                <td>{{ item.week_start_date }}</td>
+                                <td>{{ item.pgi_score | round(2) if item.pgi_score is not none else 'n/a' }}</td>
+                                <td>{{ item.prepared_composite | round(2) if item.prepared_composite is not none else 'n/a' }}</td>
+                                <td>{{ item.spontaneous_composite | round(2) if item.spontaneous_composite is not none else 'n/a' }}</td>
+                                <td>{{ item.sessions_count }}</td>
+                                <td>{{ item.snapspeak_count }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center text-secondary py-3">No PGI records available.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+    const pgiTrend = {{ pgi_trend | tojson | safe }};
+    const radarData = {{ radar_data | tojson | safe }};
+
+    (function initCharts() {
+        const pgiCtx = document.getElementById("pgiTrendChart");
+        if (pgiCtx && Array.isArray(pgiTrend) && pgiTrend.length > 0) {
+            new Chart(pgiCtx, {
+                type: "line",
+                data: {
+                    labels: pgiTrend.map((x) => x.week_label),
+                    datasets: [{
+                        label: "PGI",
+                        data: pgiTrend.map((x) => x.pgi_score),
+                        borderColor: "#2563EB",
+                        backgroundColor: "rgba(37,99,235,0.18)",
+                        pointRadius: 3,
+                        spanGaps: true,
+                        fill: true,
+                        tension: 0.28,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                        },
+                    },
+                },
+            });
+        }
+
+        const radarCtx = document.getElementById("lsrcRadarChart");
+        if (radarCtx && radarData && radarData.has_data) {
+            new Chart(radarCtx, {
+                type: "radar",
+                data: {
+                    labels: radarData.labels,
+                    datasets: radarData.datasets,
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            suggestedMax: 100,
+                        },
+                    },
+                },
+            });
+        }
+    })();
+
+    async function subscriptionAction(action, plan = "") {
+        const state = document.getElementById("subscriptionActionState");
+        state.textContent = "Updating...";
+        try {
+            const response = await fetch("{{ url_for('admin.users_subscription_action', user_id=user.id) }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({ action, plan }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Action failed");
+            }
+            state.textContent = "Subscription updated.";
+            window.setTimeout(() => window.location.reload(), 500);
+        } catch (error) {
+            state.textContent = error.message || "Unable to update";
+        }
+    }
+
+    async function extendSubscription() {
+        const days = Number(document.getElementById("extendDays")?.value || 0);
+        if (days <= 0) {
+            alert("Please enter a valid number of days.");
+            return;
+        }
+        const state = document.getElementById("subscriptionActionState");
+        state.textContent = "Extending...";
+        try {
+            const response = await fetch("{{ url_for('admin.users_subscription_action', user_id=user.id) }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({ action: "extend", days }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Action failed");
+            }
+            state.textContent = "Subscription extended.";
+            window.setTimeout(() => window.location.reload(), 500);
+        } catch (error) {
+            state.textContent = error.message || "Unable to extend";
+        }
+    }
+
+    document.getElementById("noteForm")?.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const noteText = document.getElementById("noteText")?.value?.trim();
+        const noteType = document.getElementById("noteType")?.value;
+        const noteState = document.getElementById("noteState");
+
+        if (!noteText) {
+            noteState.textContent = "Note text is required.";
+            return;
+        }
+
+        noteState.textContent = "Saving...";
+        try {
+            const response = await fetch("{{ url_for('admin.users_add_note', user_id=user.id) }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({ note_text: noteText, note_type: noteType }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Unable to save note");
+            }
+            noteState.textContent = "Note added.";
+            window.setTimeout(() => window.location.reload(), 300);
+        } catch (error) {
+            noteState.textContent = error.message || "Unable to save note";
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,145 @@
+<header id="site-header" class="site-header sticky-top bg-white">
+    <div class="container">
+        <div class="pp-header-row">
+            <a href="{{ url_for('public.index') }}" class="pp-brand" aria-label="PressureProof home">
+                <span class="pp-brand-mark" aria-hidden="true">
+                    <svg class="pp-brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                        <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.282.119l.032.012.005.002.002.001.001.001.002.001a.5.5 0 0 0 .374 0l.002-.001.001-.001.002-.001.005-.002.032-.012a5.85 5.85 0 0 0 .282-.119 7.88 7.88 0 0 0 .893-.533 10.725 10.725 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.856C9.552 1.29 8.531 1.067 8 1.067c-.531 0-1.552.223-2.662.524z"/>
+                        <path d="M10.854 5.146a.5.5 0 0 1 0 .708l-3.5 3.5a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7 8.293l3.146-3.147a.5.5 0 0 1 .708 0z"/>
+                    </svg>
+                </span>
+                <span class="pp-brand-text">PressureProof</span>
+            </a>
+
+            <button id="pwaInstallBtnMobile" type="button" class="btn pp-install-btn pp-install-btn--nav pp-install-btn--icon-only d-inline-flex d-md-none" aria-label="Install PressureProof app">
+                <span class="pp-install-btn__icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" focusable="false">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.6a.5.5 0 0 1 1 0v2.6a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.6a.5.5 0 0 1 .5-.5z"/>
+                        <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                    </svg>
+                </span>
+                <span class="visually-hidden">Install App</span>
+            </button>
+
+            <button id="mobileNavToggle" type="button" class="pp-header-toggle d-md-none" aria-controls="mobileNavPanel" aria-expanded="false" aria-label="Open navigation menu">
+                <span class="pp-header-toggle__bar"></span>
+                <span class="pp-header-toggle__bar"></span>
+                <span class="pp-header-toggle__bar"></span>
+            </button>
+
+            <div class="pp-header-actions d-none d-md-flex align-items-center gap-3">
+                <button id="pwaInstallBtn" type="button" class="btn pp-install-btn pp-install-btn--nav" aria-label="Install PressureProof app">
+                    <span class="pp-install-btn__icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16" focusable="false">
+                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.6a.5.5 0 0 1 1 0v2.6a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.6a.5.5 0 0 1 .5-.5z"/>
+                            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                        </svg>
+                    </span>
+                    <span class="pp-install-btn__text">Install App</span>
+                </button>
+                {% if current_user.is_authenticated %}
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ current_user.display_name or current_user.email.split('@')[0] }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('profile.settings') }}">Profile Settings</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('profile.subscription') }}">My Subscription</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('auth.login_get') }}" class="text-decoration-none fw-semibold text-dark">Login</a>
+                    <a href="{{ url_for('auth.register_get') }}" class="btn btn-primary d-inline-flex align-items-center gap-2" aria-label="Join PressureProof">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                            <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                            <path d="M2 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H2z"/>
+                            <path fill-rule="evenodd" d="M13.5 5.5a.5.5 0 0 1 .5.5v1.5H15.5a.5.5 0 0 1 0 1H14V10a.5.5 0 0 1-1 0V8.5H11.5a.5.5 0 0 1 0-1H13V6a.5.5 0 0 1 .5-.5z"/>
+                        </svg>
+                        <span>Join</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div id="mobileNavPanel" class="pp-mobile-nav d-md-none" hidden>
+            <div class="pp-mobile-nav__inner">
+                {% if current_user.is_authenticated %}
+                    <div class="pp-mobile-nav__section">
+                        <div class="pp-mobile-nav__label">Account</div>
+                        <a class="pp-mobile-nav__link" href="{{ url_for('dashboard.index') }}">Dashboard</a>
+                        <a class="pp-mobile-nav__link" href="{{ url_for('profile.settings') }}">Profile Settings</a>
+                        <a class="pp-mobile-nav__link" href="{{ url_for('profile.subscription') }}">My Subscription</a>
+                        <a class="pp-mobile-nav__link" href="{{ url_for('auth.logout') }}">Logout</a>
+                    </div>
+                {% else %}
+                    <div class="pp-mobile-nav__section">
+                        <a class="pp-mobile-nav__link" href="{{ url_for('auth.login_get') }}">Login</a>
+                        <a class="pp-mobile-nav__link pp-mobile-nav__link--primary" href="{{ url_for('auth.register_get') }}">Join PressureProof</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</header>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const header = document.getElementById("site-header");
+        if (!header) {
+            return;
+        }
+
+        const mobileToggle = document.getElementById("mobileNavToggle");
+        const mobilePanel = document.getElementById("mobileNavPanel");
+
+        const onScroll = function () {
+            if (window.scrollY > 4) {
+                header.classList.add("header--scrolled");
+            } else {
+                header.classList.remove("header--scrolled");
+            }
+        };
+
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+
+        if (mobileToggle && mobilePanel) {
+            const closeMobileNav = function () {
+                mobilePanel.hidden = true;
+                mobilePanel.classList.remove("is-opened");
+                mobileToggle.setAttribute("aria-expanded", "false");
+            };
+
+            const openMobileNav = function () {
+                mobilePanel.hidden = false;
+                requestAnimationFrame(function () {
+                    mobilePanel.classList.add("is-opened");
+                });
+                mobileToggle.setAttribute("aria-expanded", "true");
+            };
+
+            mobileToggle.addEventListener("click", function () {
+                if (mobilePanel.hidden) {
+                    openMobileNav();
+                } else {
+                    closeMobileNav();
+                }
+            });
+
+            mobilePanel.addEventListener("click", function (event) {
+                if (event.target.closest("a, button")) {
+                    closeMobileNav();
+                }
+            });
+
+            window.addEventListener("resize", function () {
+                if (window.matchMedia("(min-width: 768px)").matches) {
+                    closeMobileNav();
+                }
+            }, { passive: true });
+        }
+    });
+</script>

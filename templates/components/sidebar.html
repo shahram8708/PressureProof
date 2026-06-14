@@ -1,0 +1,99 @@
+{% set endpoint = request.endpoint or '' %}
+{% set pgi_data = pgi_summary | default({}) %}
+{% set subscription_data = subscription_info | default({}) %}
+{% set current_pgi = pgi_data.get('current_pgi') %}
+{% set pgi_direction = pgi_data.get('pgi_direction', 'insufficient_data') %}
+{% set tier = subscription_data.get('subscription_tier', current_user.subscription_tier if current_user.is_authenticated else 'free') %}
+{% set trial_days_remaining = subscription_data.get('trial_days_remaining') %}
+
+<div class="card h-100 p-3 d-flex flex-column">
+    <ul class="pp-sidebar-nav mb-3">
+        <li>
+            <a href="{{ url_for('dashboard.index') }}" class="{% if endpoint.startswith('dashboard.') %}active pp-nav-active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 2 8h1v6a.5.5 0 0 0 .5.5H6a.5.5 0 0 0 .5-.5V10h3v4a.5.5 0 0 0 .5.5h2.5a.5.5 0 0 0 .5-.5V8h1a.5.5 0 0 0 .354-.854l-6-6Z"/></svg>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('lsrc.dashboard') }}" class="{% if endpoint == 'lsrc.dashboard' %}active pp-nav-active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M0 0h1v15h15v1H0V0Zm10 10h2v3h-2v-3Zm-6-3h2v6H4V7Zm3 2h2v4H7V9Zm6-6h2v10h-2V3Z"/></svg>
+                <span>My LSRC</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('lsrc.pgi') }}" class="{% if endpoint == 'lsrc.pgi' %}active pp-nav-active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M0 0h1v15h15v1H0V0Zm14.854 4.146a.5.5 0 0 0-.708 0L11 7.293 9.354 5.646a.5.5 0 0 0-.708 0L6 8.293 4.354 6.646a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0L9 6.707l1.646 1.647a.5.5 0 0 0 .708 0l3.5-3.5a.5.5 0 0 0 0-.708Z"/></svg>
+                <span>PGI Tracker</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('sessions.new_session') }}" class="{% if endpoint.startswith('sessions.') %}active pp-nav-active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm-1.5-9.5v5l4-2.5-4-2.5Z"/></svg>
+                <span>Sessions</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('snapspeak.capture') }}" class="{% if endpoint.startswith('snapspeak.') %}active pp-nav-active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Zm4 7a.5.5 0 0 1 1 0 5 5 0 0 1-4.5 4.975V15h2a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1h2v-2.025A5 5 0 0 1 3 8a.5.5 0 0 1 1 0 4 4 0 0 0 8 0Z"/></svg>
+                <span>SnapSpeak</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('sessions.drills_library') }}" class="{% if endpoint == 'sessions.drills_library' or endpoint == 'sessions.drills_active' or endpoint == 'sessions.complete_drill' %}active pp-nav-active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M7.5 1.5a.5.5 0 0 1 .5.5V6h3.5a.5.5 0 0 1 .39.813L8.5 11h3a.5.5 0 0 1 .39.813l-5 6A.5.5 0 0 1 6 17.5V13H2.5a.5.5 0 0 1-.39-.813L5.5 8h-3a.5.5 0 0 1-.39-.813l5-6A.5.5 0 0 1 7.5 1.5Z"/></svg>
+                <span>Drills</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('cohort.index') }}" class="{% if endpoint.startswith('cohort.') %}active pp-nav-active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 3a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Zm10 0a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM8 5.5A2.5 2.5 0 1 1 8 .5a2.5 2.5 0 0 1 0 5Zm-6.5 9A2.5 2.5 0 0 1 4 12h3a3 3 0 0 1 6 0h1.5a1 1 0 0 1 1 1v2h-2v-2H2v2H0v-2a1 1 0 0 1 1-1h.5Z"/></svg>
+                <span>Cohort</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('certificate.index') }}" class="{% if endpoint.startswith('certificate.') %}active pp-nav-active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M9.669.864 8 0 6.331.864 4.5.5l-.864 1.669L2 .5.5 2l.364 1.831L.5 5.5l1.669.864L2 8l.864 1.669L.5 10.5 2 12l1.669-.364L4.5 13.5l1.831-.364L8 14l1.669-.864L11.5 13.5l.864-1.669L14 12l1.5-1.5-.364-1.669L16 8l-.864-1.669.364-1.831L14 4l-1.636.364L11.5 2.5 9.669.864ZM8 11.5A3.5 3.5 0 1 1 8 4a3.5 3.5 0 0 1 0 7.5Z"/></svg>
+                <span>Certificate</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('profile.settings') }}" class="{% if endpoint.startswith('profile.') %}active pp-nav-active{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm5 7a5 5 0 1 0-10 0h10Z"/></svg>
+                <span>Profile</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="mt-auto border-top pt-3">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="small text-secondary">Subscription</span>
+            {% if tier == 'professional' %}
+                <span class="badge text-dark" style="background:#F59E0B;">Professional</span>
+            {% elif tier == 'pro_annual' %}
+                <span class="badge text-white" style="background:#1E1B4B;">Pro Annual</span>
+            {% else %}
+                <span class="badge border text-secondary">Free</span>
+            {% endif %}
+        </div>
+
+        {% if tier == 'free' %}
+            {% if trial_days_remaining is not none and trial_days_remaining > 0 %}
+                <p class="small text-secondary mb-2">Trial: {{ trial_days_remaining }} days left</p>
+            {% else %}
+                <a href="{{ url_for('upgrade.index') }}" class="small fw-semibold text-decoration-none" style="color:#F59E0B;">Upgrade</a>
+            {% endif %}
+        {% endif %}
+
+        <div class="small text-secondary mt-2">Progress summary</div>
+        <div class="d-flex align-items-center gap-2 fw-semibold" style="color:#1E1B4B;">
+            <span>PGI: {% if current_pgi is not none %}{{ current_pgi | round(1) }}{% else %}&mdash;{% endif %}</span>
+            {% if pgi_direction == 'improving' %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#F59E0B" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 4a.5.5 0 0 0-.5.5v7.793L5.354 10.146a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 12.293V4.5A.5.5 0 0 0 8 4Z"/></svg>
+            {% elif pgi_direction == 'stable' %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#6B7280" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h10.793L10.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 1 1-.708-.708L12.293 8.5H1.5A.5.5 0 0 1 1 8Z"/></svg>
+            {% elif pgi_direction == 'declining' %}
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#6B7280" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 12a.5.5 0 0 0 .5-.5V3.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 3.707V11.5A.5.5 0 0 0 8 12Z"/></svg>
+            {% endif %}
+        </div>
+    </div>
+</div>

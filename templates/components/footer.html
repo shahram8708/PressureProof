@@ -1,0 +1,26 @@
+<footer class="site-footer py-5 mt-5">
+    <div class="container">
+        <div class="row align-items-center g-4 text-center text-md-start">
+            <div class="col-12 col-md-6">
+                <a href="{{ url_for('public.index') }}" class="pp-brand pp-brand--light mb-3">
+                    <span class="pp-brand-mark" aria-hidden="true">
+                        <svg class="pp-brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                            <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.282.119l.032.012.005.002.002.001.001.001.002.001a.5.5 0 0 0 .374 0l.002-.001.001-.001.002-.001.005-.002.032-.012a5.85 5.85 0 0 0 .282-.119 7.88 7.88 0 0 0 .893-.533 10.725 10.725 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.856C9.552 1.29 8.531 1.067 8 1.067c-.531 0-1.552.223-2.662.524z"/>
+                            <path d="M10.854 5.146a.5.5 0 0 1 0 .708l-3.5 3.5a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7 8.293l3.146-3.147a.5.5 0 0 1 .708 0z"/>
+                        </svg>
+                    </span>
+                    <span class="pp-brand-text">PressureProof</span>
+                </a>
+                <p class="mb-0 text-primary-light">&copy; 2026 PressureProof. Built for the 400 million who plateau.</p>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="d-flex flex-column flex-md-row justify-content-md-end align-items-center gap-3">
+                    <a href="{{ url_for('public.about') }}" class="footer-link">About</a>
+                    <a href="{{ url_for('public.privacy') }}" class="footer-link">Privacy</a>
+                    <a href="{{ url_for('public.terms') }}" class="footer-link">Terms</a>
+                    <a href="mailto:hello@pressureproof.com" class="footer-link">Contact</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>

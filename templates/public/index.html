@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% set hide_sidebar = True %}
+{% set no_sidebar = True %}
+
+{% block title %}PressureProof - Train Your English for High-Stakes Moments{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section {
+    background: #1E1B4B;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
+
+.hero-title {
+    color: #FFFFFF;
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    line-height: 1.1;
+    font-weight: 700;
+}
+
+.hero-subtitle {
+    color: #A5B4FC;
+    font-size: 1.125rem;
+    max-width: 640px;
+}
+
+.hero-cta {
+    background: #F59E0B;
+    color: #111827;
+    border: 0;
+    border-radius: 8px;
+    height: 52px;
+    padding: 0 24px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.hero-cta:hover {
+    background: #FCD34D;
+    color: #111827;
+}
+
+.hero-meta {
+    color: #9CA3AF;
+    font-size: 0.9rem;
+}
+
+.hero-pressure-svg {
+    width: 100%;
+    max-width: 360px;
+}
+
+.pressure-fill {
+    transform-origin: 160px 360px;
+    transform: scaleY(0.1);
+    animation: pressureFill 5.5s ease-in-out infinite;
+}
+
+.fade-word {
+    animation: fadeWords 5.5s ease-in-out infinite;
+}
+
+.fallback-word {
+    opacity: 0;
+    animation: showFallback 5.5s ease-in-out infinite;
+}
+
+@keyframes pressureFill {
+    0% { transform: scaleY(0.1); }
+    70% { transform: scaleY(1); }
+    100% { transform: scaleY(1); }
+}
+
+@keyframes fadeWords {
+    0% { opacity: 1; }
+    65% { opacity: 0.15; }
+    100% { opacity: 0.15; }
+}
+
+@keyframes showFallback {
+    0% { opacity: 0; }
+    70% { opacity: 0; }
+    85% { opacity: 1; }
+    100% { opacity: 1; }
+}
+
+.section-problem p {
+    font-size: 1.05rem;
+    color: #374151;
+}
+
+.number-dot {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #F59E0B;
+    color: #111827;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.persona-quote {
+    font-style: italic;
+    color: #374151;
+}
+
+.pgi-pair {
+    color: #B45309;
+    font-weight: 600;
+}
+
+@media (max-width: 991.98px) {
+    .hero-section {
+        min-height: 80vh;
+        padding: 72px 0;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center gy-5">
+            <div class="col-lg-7">
+                <h1 class="hero-title mb-4">The English you know available when it matters.</h1>
+                <p class="hero-subtitle mb-4">PressureProof measures and trains the gap between the English you know and the English you can use when it counts.</p>
+                <a href="{{ url_for('auth.register_get') }}" class="hero-cta">Find my Preparation Gap its free</a>
+                <p class="hero-meta mt-3 mb-0">No credit card required. 14 day free trial.</p>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block text-center">
+                <svg class="hero-pressure-svg" viewBox="0 0 320 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pressure simulation">
+                    <rect x="120" y="40" width="80" height="320" rx="20" fill="#312E81" stroke="#818CF8" stroke-width="2"></rect>
+                    <rect class="pressure-fill" x="120" y="40" width="80" height="320" rx="20" fill="#F59E0B"></rect>
+                    <text class="fade-word" x="22" y="95" fill="#E0E7FF" font-size="20" font-family="Inter">articulate</text>
+                    <text class="fade-word" x="22" y="145" fill="#E0E7FF" font-size="20" font-family="Inter">precise</text>
+                    <text class="fade-word" x="22" y="195" fill="#E0E7FF" font-size="20" font-family="Inter">coherent</text>
+                    <text class="fade-word" x="22" y="245" fill="#E0E7FF" font-size="20" font-family="Inter">confident</text>
+                    <text class="fade-word" x="22" y="295" fill="#E0E7FF" font-size="20" font-family="Inter">eloquent</text>
+                    <text class="fallback-word" x="210" y="290" fill="#FDE68A" font-size="18" font-family="Inter">basically...</text>
+                    <text class="fallback-word" x="210" y="320" fill="#FDE68A" font-size="18" font-family="Inter">um...</text>
+                    <text class="fallback-word" x="210" y="350" fill="#FDE68A" font-size="18" font-family="Inter">you know...</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section-problem py-5 bg-white">
+    <div class="container">
+        <div class="mx-auto" style="max-width: 800px;">
+            <h2 class="mb-4">What actually happens to your English under pressure.</h2>
+            <p>When multiple demands hit your working memory at the same time in a high stakes English conversation processing fast speech, managing social perception, formulating grammar, and monitoring your own output capacity gets exceeded. In that overload moment, second language vocabulary is often the first casualty.</p>
+            <p>You are also aware that you are underperforming, and that awareness creates another meta cognitive monitoring layer. That extra layer steals even more cognitive bandwidth, performance drops again, and shame rises with every sentence.</p>
+            <p>This is not a knowledge problem. Your English is good enough. It is a deployment problem. The language knowledge exists, but under stress you cannot access it reliably enough to perform.</p>
+            <blockquote class="border-accent-left ps-4 mt-4 mb-0 py-2 fs-5 text-dark">Your English is good enough. You just cannot access it yet when it counts.</blockquote>
+        </div>
+    </div>
+</section>
+
+<section class="py-5" style="background: #F9FAFB;">
+    <div class="container">
+        <h2 class="text-center mb-5">Three things PressureProof does that nothing else does.</h2>
+        <div class="row g-4">
+            <div class="col-12 col-md-4">
+                <div class="card h-100 p-4">
+                    <span class="number-dot">1</span>
+                    <h3 class="h4">Diagnose</h3>
+                    <p class="mb-0">Measures your preparation gap precisely across six linguistic dimensions. You receive a data map of exactly when, why, and how your English breaks down not a vague confidence score.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="card h-100 p-4">
+                    <span class="number-dot">2</span>
+                    <h3 class="h4">Train</h3>
+                    <p class="mb-0">Uses controlled stress injection mid session to progressively build stress tolerance. The same progressive overload principle athletes use calibrated just above your current threshold so every session is hard enough to build resilience.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="card h-100 p-4">
+                    <span class="number-dot">3</span>
+                    <h3 class="h4">Track</h3>
+                    <p class="mb-0">Captures real world spontaneous speech via SnapSpeak at random intervals throughout your day. This verifies that the gains you make in training sessions actually transfer to your daily professional life.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-white">
+    <div class="container">
+        <h2 class="text-center mb-5">Who PressureProof is for.</h2>
+        <div class="row g-4">
+            <div class="col-12 col-md-6">
+                <div class="persona-card card h-100 p-4">
+                    <svg width="64" height="64" viewBox="0 0 64 64" class="mb-3" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="30" fill="#E0E7FF"/><polygon points="12,46 24,12 52,22 44,52" fill="#4F46E5"/><circle cx="42" cy="22" r="9" fill="#F59E0B"/></svg>
+                    <h3 class="h5 mb-1">Arjun</h3>
+                    <p class="text-secondary mb-2">Senior Software Engineer, Bengaluru</p>
+                    <p class="persona-quote">I froze when the client asked about deployment risks. I knew the answer. I just could not say it.</p>
+                    <p class="mb-0">Avoids client facing roles despite IELTS 7.0 because of unexplained breakdown under pressure.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="persona-card card h-100 p-4">
+                    <svg width="64" height="64" viewBox="0 0 64 64" class="mb-3" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="56" height="56" rx="14" fill="#EEF2FF"/><polygon points="10,50 30,10 56,36 28,54" fill="#1E1B4B"/><circle cx="20" cy="20" r="8" fill="#F59E0B"/></svg>
+                    <h3 class="h5 mb-1">Tomás</h3>
+                    <p class="text-secondary mb-2">IELTS Retaker, Buenos Aires</p>
+                    <p class="persona-quote">I score Band 7 practicing in my room. I score Band 5.5 in the actual test. I have done this three times.</p>
+                    <p class="mb-0">Cannot explain the gap between practice performance and test performance. Stakes are immigration.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="persona-card card h-100 p-4">
+                    <svg width="64" height="64" viewBox="0 0 64 64" class="mb-3" xmlns="http://www.w3.org/2000/svg"><circle cx="32" cy="32" r="30" fill="#EEF2FF"/><path d="M10 44 L24 12 L52 20 L46 54 Z" fill="#312E81"/><circle cx="18" cy="42" r="8" fill="#F59E0B"/></svg>
+                    <h3 class="h5 mb-1">Priya</h3>
+                    <p class="text-secondary mb-2">BPO Team Lead, Manila</p>
+                    <p class="persona-quote">When a caller raises their voice, my vocabulary just disappears and my sentences fall apart.</p>
+                    <p class="mb-0">English quality drops measurably under irate or fast speaking callers, affecting CSAT scores.</p>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="persona-card card h-100 p-4">
+                    <svg width="64" height="64" viewBox="0 0 64 64" class="mb-3" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="60" height="60" rx="30" fill="#E0E7FF"/><polygon points="8,36 30,8 56,28 34,56" fill="#4F46E5"/><rect x="40" y="10" width="14" height="14" rx="4" fill="#F59E0B"/></svg>
+                    <h3 class="h5 mb-1">Linh</h3>
+                    <p class="text-secondary mb-2">Product Manager, Ho Chi Minh City</p>
+                    <p class="persona-quote">I code switch back to Vietnamese mid sentence in heated meetings and lose the thread entirely.</p>
+                    <p class="mb-0">Perceived as less confident in leadership situations despite strong technical contributions in writing.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5" style="background: #F9FAFB;">
+    <div class="container">
+        <h2 class="text-center mb-5">Early users, real results.</h2>
+        <div class="row g-4">
+            <div class="col-12 col-md-4">
+                <article class="testimonial-card h-100">
+                    <div class="testimonial-avatar">VS</div>
+                    <h3 class="h5 mt-3 mb-1">Vikram S.</h3>
+                    <p class="text-secondary mb-3">IT Consultant, Pune</p>
+                    <p class="fst-italic">After 8 weeks I realized I was no longer dreading client calls. My PGI went from 38 to 19. The injection sessions felt horrible at first and that is exactly why they worked.</p>
+                    <p class="pgi-pair mb-0">PGI before 38 | after 19</p>
+                </article>
+            </div>
+            <div class="col-12 col-md-4">
+                <article class="testimonial-card h-100">
+                    <div class="testimonial-avatar">AM</div>
+                    <h3 class="h5 mt-3 mb-1">Ana M.</h3>
+                    <p class="text-secondary mb-3">IELTS Applicant, Bucharest</p>
+                    <p class="fst-italic">I finally understood why I kept scoring lower in the actual test. My vocabulary under time pressure was the problem. Targeted that specifically for 6 weeks. Band 6.5.</p>
+                    <p class="pgi-pair mb-0">PGI before 42 | after 24</p>
+                </article>
+            </div>
+            <div class="col-12 col-md-4">
+                <article class="testimonial-card h-100">
+                    <div class="testimonial-avatar">RK</div>
+                    <h3 class="h5 mt-3 mb-1">Rajesh K.</h3>
+                    <p class="text-secondary mb-3">Customer Success Lead, Hyderabad</p>
+                    <p class="fst-italic">The SnapSpeak feature was uncomfortable at first random prompts with no warning. That is the point. My unscheduled speech is now almost as good as my prepared speech.</p>
+                    <p class="pgi-pair mb-0">PGI before 35 | after 17</p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-white">
+    <div class="container text-center">
+        <h2 class="mb-3">Start with a free assessment.</h2>
+        <p class="text-secondary mb-4">No credit card. No commitment. Just a precise map of your English under pressure.</p>
+        <a href="{{ url_for('auth.register_get') }}" class="hero-cta">Find my Preparation Gap its free</a>
+    </div>
+</section>
+{% endblock %}

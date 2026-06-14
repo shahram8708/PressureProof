@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}New Session - PressureProof{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('sessions.new_session') }}">Sessions</a></li>
+            <li class="breadcrumb-item active" aria-current="page">New Session</li>
+        </ol>
+    </nav>
+
+    <div class="mx-auto" style="max-width: 680px;">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <span class="badge" style="background:#1E1B4B; color:#FFFFFF; font-size:0.82rem; padding:0.5rem 0.75rem;">
+                {{ session_type_display_name }}
+            </span>
+            <span class="small text-secondary">Session {{ session_number }}</span>
+        </div>
+
+        <h2 class="h3 mb-3" style="color:#111827;">Today's session prompt.</h2>
+
+        <div class="card mb-4" style="border-radius:12px; border-top:3px solid #F59E0B;">
+            <div class="card-body p-4">
+                <p class="mb-3" style="font-size:20px; line-height:1.8; color:#1E1B4B;">
+                    {{ prompt_text }}
+                </p>
+                <p class="small mb-0" style="color:#6B7280;">
+                    Speak clearly and at your natural pace. There are no right or wrong answers.
+                </p>
+            </div>
+        </div>
+
+        <ul class="list-group list-group-flush border rounded mb-4" style="font-size:0.9rem;">
+            <li class="list-group-item">Duration: approximately 10 to 12 minutes</li>
+            <li class="list-group-item">Format: two 3 minute speaking segments</li>
+            <li class="list-group-item">What to expect: this session may include unexpected challenges and that is intentional and central to the training.</li>
+        </ul>
+
+        <div class="card mb-4" id="micTestCard">
+            <div class="card-body p-4">
+                <h3 class="h5 mb-3">Test your microphone before starting.</h3>
+                <p class="small text-secondary mb-3">
+                    Record a five second sample and play it back to check clarity and volume.
+                </p>
+                <button id="testMicButton" type="button" class="btn btn-outline-primary mb-3">Test mic - 5 seconds</button>
+
+                <div id="micTestStatus" class="small text-secondary mb-3" aria-live="polite"></div>
+                <div id="micTestResult"></div>
+
+                <audio id="micPlayback" class="w-100 d-none" controls preload="metadata"></audio>
+
+                <div id="micPermissionError" class="alert alert-danger mt-3 d-none" role="alert">
+                    <h4 class="h6 mb-2">Microphone access is blocked.</h4>
+                    <p class="mb-2">Enable microphone permission in your browser settings, then refresh this page and test again.</p>
+                    <a href="https://support.google.com/chrome/answer/2693767" target="_blank" rel="noopener">Browser microphone permission instructions</a>
+                </div>
+            </div>
+        </div>
+
+        <form id="beginSessionForm" method="post" action="{{ url_for('sessions.create_session') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="session_type" value="{{ calibration.next_session_type }}">
+            <input type="hidden" name="prompt_text" value="{{ prompt_text }}">
+            <input type="hidden" name="injection_type" value="{{ calibration.next_injection_type }}">
+
+            <button id="beginSessionButton" type="submit" class="btn btn-primary btn-lg w-100">
+                Begin session
+            </button>
+        </form>
+
+        <p class="small text-secondary mt-2 mb-0">
+            Your first session uses gentle time pressure only. Stronger stress modes are introduced gradually over your first 12 sessions.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const testButton = document.getElementById("testMicButton");
+        const statusEl = document.getElementById("micTestStatus");
+        const resultEl = document.getElementById("micTestResult");
+        const playbackEl = document.getElementById("micPlayback");
+        const beginForm = document.getElementById("beginSessionForm");
+        const beginButton = document.getElementById("beginSessionButton");
+        const permissionErrorEl = document.getElementById("micPermissionError");
+        const micCard = document.getElementById("micTestCard");
+        const micHealthUrl = "{{ microphone_test_endpoint }}";
+
+        let micPermissionGranted = false;
+        let testStream = null;
+
+        function clearResult() {
+            resultEl.innerHTML = "";
+            permissionErrorEl.classList.add("d-none");
+        }
+
+        function renderAlert(type, message) {
+            resultEl.innerHTML = `<div class="alert alert-${type} py-2 mb-3" role="alert">${message}</div>`;
+        }
+
+        function stopStream(stream) {
+            if (!stream) {
+                return;
+            }
+            stream.getTracks().forEach((track) => track.stop());
+        }
+
+        async function recordFiveSeconds(stream) {
+            const mimeType = window.MediaRecorder && MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+                ? "audio/webm;codecs=opus"
+                : "audio/webm";
+
+            const recorder = new MediaRecorder(stream, { mimeType });
+            const chunks = [];
+
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaStreamSource(stream);
+            const analyser = audioContext.createAnalyser();
+            analyser.fftSize = 512;
+            source.connect(analyser);
+
+            const buffer = new Uint8Array(analyser.fftSize);
+            let peak = 0;
+            const monitorId = window.setInterval(() => {
+                analyser.getByteTimeDomainData(buffer);
+                let sum = 0;
+                for (let i = 0; i < buffer.length; i += 1) {
+                    const value = (buffer[i] - 128) / 128;
+                    sum += value * value;
+                }
+                const rms = Math.sqrt(sum / buffer.length);
+                peak = Math.max(peak, rms);
+            }, 120);
+
+            recorder.ondataavailable = (event) => {
+                if (event.data && event.data.size > 0) {
+                    chunks.push(event.data);
+                }
+            };
+
+            statusEl.textContent = "Recording sample...";
+            recorder.start();
+
+            await new Promise((resolve) => window.setTimeout(resolve, 5000));
+            recorder.stop();
+
+            await new Promise((resolve) => {
+                recorder.onstop = resolve;
+            });
+
+            window.clearInterval(monitorId);
+            source.disconnect();
+            analyser.disconnect();
+            await audioContext.close();
+
+            return {
+                blob: new Blob(chunks, { type: mimeType }),
+                peak,
+            };
+        }
+
+        async function runMicTest() {
+            clearResult();
+            testButton.disabled = true;
+            statusEl.textContent = "Requesting microphone access...";
+
+            try {
+                await fetch(micHealthUrl, {
+                    method: "GET",
+                    credentials: "same-origin"
+                });
+
+                testStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                micPermissionGranted = true;
+
+                const sample = await recordFiveSeconds(testStream);
+                const objectUrl = URL.createObjectURL(sample.blob);
+
+                playbackEl.classList.remove("d-none");
+                playbackEl.src = objectUrl;
+                statusEl.textContent = "Playback ready. Listen to your sample now.";
+
+                if (sample.peak >= 0.012) {
+                    renderAlert("success", "Microphone test passed. Your voice signal was detected clearly.");
+                } else {
+                    renderAlert("warning", "Recording captured very low signal. Move closer to the microphone and test again.");
+                }
+            } catch (error) {
+                micPermissionGranted = false;
+                statusEl.textContent = "Microphone test could not run.";
+
+                if (error && error.name === "NotAllowedError") {
+                    permissionErrorEl.classList.remove("d-none");
+                    renderAlert("warning", "Microphone access is required before starting the session.");
+                } else {
+                    renderAlert("danger", "Unable to access microphone. Please verify your browser audio settings.");
+                }
+            } finally {
+                stopStream(testStream);
+                testStream = null;
+                testButton.disabled = false;
+            }
+        }
+
+        testButton.addEventListener("click", () => {
+            runMicTest();
+        });
+
+        beginForm.addEventListener("submit", (event) => {
+            if (micPermissionGranted) {
+                return;
+            }
+
+            event.preventDefault();
+            renderAlert("danger", "Please allow microphone permission and run the five second mic test before starting.");
+            micCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            beginButton.blur();
+        });
+    })();
+</script>
+{% endblock %}

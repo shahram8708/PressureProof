@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - PressureProof{% endblock %}
+
+{% block content %}
+{% set ns = namespace(prev=None, last=None) %}
+{% for point in pgi_sparkline_data %}
+    {% if point.pgi_score is not none %}
+        {% set ns.prev = ns.last %}
+        {% set ns.last = point.pgi_score %}
+    {% endif %}
+{% endfor %}
+{% set pgi_trend_state = 'stable' %}
+{% if ns.prev is not none and ns.last is not none %}
+    {% if ns.last < ns.prev %}
+        {% set pgi_trend_state = 'improving' %}
+    {% elif ns.last > ns.prev %}
+        {% set pgi_trend_state = 'watch' %}
+    {% endif %}
+{% endif %}
+
+<section class="container-fluid px-0">
+    <div class="card pp-readiness-card mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="pp-readiness-value">
+                    {% if readiness_score is not none %}{{ readiness_score }}{% else %}&mdash;{% endif %}
+                </div>
+                <div class="text-secondary" style="font-size:14px;">
+                    {% if readiness_score is not none %}
+                        Today's Readiness
+                    {% else %}
+                        Complete your baseline to see your score.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-7">
+                {% if readiness_score is none %}
+                    <p class="mb-0 text-secondary">Complete more sessions and SnapSpeaks to build your readiness picture.</p>
+                {% elif readiness_score >= 75 %}
+                    <p class="mb-0 text-secondary">Your stress tolerance is high today &mdash; this is a good day for a challenging session.</p>
+                {% elif readiness_score >= 50 %}
+                    <p class="mb-0 text-secondary">Solid foundation. A standard session will push you productively.</p>
+                {% elif readiness_score >= 25 %}
+                    <p class="mb-0 text-secondary">A lighter session or a SnapSpeak will still build your profile.</p>
+                {% else %}
+                    <p class="mb-0 text-secondary">Complete more sessions and SnapSpeaks to build your readiness picture.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card h-100 p-3">
+                <div class="pp-pgi-mini">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <div class="pp-pgi-number">
+                            {% if current_pgi is not none %}{{ current_pgi | round(1) }}{% else %}&mdash;{% endif %}
+                        </div>
+                        <div class="small fw-semibold">
+                            {% if pgi_trend_state == 'improving' %}
+                                <span style="color:#F59E0B;">&#8595; Improving</span>
+                            {% elif pgi_trend_state == 'watch' %}
+                                <span style="color:#6B7280;">&#8593; Watch this</span>
+                            {% else %}
+                                <span style="color:#6B7280;">&#8594; Stable</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-secondary mb-2" style="font-size:13px;">Preparation Gap Index &mdash; lower is better</div>
+                    <div class="pp-sparkline-wrap">
+                        <canvas id="pgiSparkline"></canvas>
+                    </div>
+                    {% if current_pgi is none %}
+                        <div class="text-secondary mt-1" style="font-size:13px;">Builds after your first session.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="pp-action-card h-100 d-flex flex-column justify-content-between">
+                {% if recommended_action == 'session' %}
+                    <div>
+                        <h3 class="h5 mb-2" style="color:#1E1B4B;">Ready for today's session?</h3>
+                        <p class="mb-3 text-secondary">Your calibrated session is prepared. It targets {{ focus_dimension }} specifically.</p>
+                    </div>
+                    <a href="{{ url_for('sessions.new_session') }}" class="btn btn-primary w-100">Start session &#8594;</a>
+                {% elif recommended_action == 'snapspeak' %}
+                    <div>
+                        <h3 class="h5 mb-2" style="color:#1E1B4B;">Time for a SnapSpeak</h3>
+                        <p class="mb-3 text-secondary">A 90 second unscheduled speaking challenge. No preparation allowed.</p>
+                    </div>
+                    <a href="{{ url_for('snapspeak.capture') }}" class="btn btn-primary w-100">Open SnapSpeak &#8594;</a>
+                {% else %}
+                    <div>
+                        <h3 class="h5 mb-2" style="color:#1E1B4B;">You're done for today</h3>
+                        <p class="mb-3 text-secondary">Come back tomorrow. Consistency over intensity.</p>
+                    </div>
+                    <a href="{{ url_for('lsrc.dashboard') }}" class="text-decoration-none fw-semibold" style="color:#1E1B4B;">View your progress &#8594;</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="pp-stat-card h-100">
+                <div class="text-secondary pp-stat-label">Sessions this week</div>
+                <div class="pp-stat-value">{{ sessions_this_week }}</div>
+                <div class="text-secondary" style="font-size:13px;">sessions completed</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="pp-stat-card h-100">
+                <div class="text-secondary pp-stat-label">Focus dimension</div>
+                <div class="fw-bold" style="font-size:18px; color:#1E1B4B;">{{ focus_dimension }}</div>
+                <div class="text-secondary" style="font-size:13px;">primary training target this week</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="pp-stat-card h-100">
+                <div class="text-secondary pp-stat-label">Days active</div>
+                <div class="pp-stat-value">{{ days_active }}</div>
+                <div class="text-secondary" style="font-size:13px;">days with recorded speech</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card p-3">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="h5 mb-0">Recent SnapSpeaks</h2>
+            <a href="{{ url_for('snapspeak.history') }}" class="text-decoration-none fw-semibold" style="color:#1E1B4B;">View all &#8594;</a>
+        </div>
+
+        {% if recent_snapspeaks|length == 0 %}
+            <div class="text-secondary">
+                No SnapSpeaks yet. Enable SnapSpeak notifications in your profile to start capturing your real world English.
+                <a href="{{ url_for('profile.settings') }}" class="fw-semibold text-decoration-none" style="color:#1E1B4B;">Go to settings</a>
+            </div>
+        {% else %}
+            <div>
+                {% for snap in recent_snapspeaks %}
+                    {% set snap_time = snap.captured_at if snap.captured_at is defined else snap.created_at %}
+                    {% set snap_prompt = snap.prompt if snap.prompt else 'Prompt unavailable for this capture.' %}
+                    {% set analysis_line = snap.analysis_line_1 if snap.analysis_line_1 is defined and snap.analysis_line_1 else (snap.transcript[:95] ~ '...') if snap.transcript else 'Speech captured successfully.' %}
+                    <div class="pp-snapspeak-mini">
+                        <div class="me-3">
+                            <span class="badge bg-light text-secondary">{{ snap_time | strftime('%d %b, %I:%M %p') }}</span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="pp-snapspeak-prompt">{{ snap_prompt[:70] }}{% if snap_prompt|length > 70 %}...{% endif %}</div>
+                            <div class="pp-snapspeak-analysis">{{ analysis_line }}</div>
+                        </div>
+                        {% if snap.context_tag is defined and snap.context_tag %}
+                            <span class="badge border text-secondary">{{ snap.context_tag }}</span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/pgi_chart.js') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const sparklineData = {{ pgi_sparkline_data | tojson | safe }};
+            window.initSparklineChart("pgiSparkline", sparklineData);
+        });
+    </script>
+{% endblock %}

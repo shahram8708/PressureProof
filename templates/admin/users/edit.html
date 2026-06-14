@@ -1,0 +1,70 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} - PressureProof Admin{% endblock %}
+
+{% block content %}
+<section>
+    <div class="admin-section-title mb-3">
+        <h1 class="h4 mb-0">Edit User #{{ user.id }}</h1>
+        <a class="btn btn-outline-secondary" href="{{ url_for('admin.users_detail', user_id=user.id) }}">Back to Detail</a>
+    </div>
+
+    <form class="admin-card" method="post" action="{{ url_for('admin.users_edit_post', user_id=user.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="display_name">Display name</label>
+                <input id="display_name" name="display_name" class="form-control" type="text" value="{{ user.display_name or '' }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="email">Email</label>
+                <input id="email" name="email" class="form-control" type="email" value="{{ user.email }}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="country">Country</label>
+                <input id="country" name="country" class="form-control" type="text" value="{{ user.country or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="l1_language">L1 language</label>
+                <input id="l1_language" name="l1_language" class="form-control" type="text" value="{{ user.l1_language or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="professional_context">Professional context</label>
+                <input id="professional_context" name="professional_context" class="form-control" type="text" value="{{ user.professional_context or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="subscription_tier">Subscription tier</label>
+                <select id="subscription_tier" class="form-select" name="subscription_tier">
+                    <option value="free" {% if user.subscription_tier == 'free' %}selected{% endif %}>Free</option>
+                    <option value="professional" {% if user.subscription_tier == 'professional' %}selected{% endif %}>Professional</option>
+                    <option value="pro_annual" {% if user.subscription_tier == 'pro_annual' %}selected{% endif %}>Pro Annual</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="subscription_expires_at">Subscription expires at</label>
+                <input id="subscription_expires_at" name="subscription_expires_at" class="form-control" type="date" value="{{ user.subscription_expires_at.strftime('%Y-%m-%d') if user.subscription_expires_at else '' }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="form-check me-3">
+                    <input class="form-check-input" id="email_verified" type="checkbox" name="email_verified" {% if user.email_verified %}checked{% endif %}>
+                    <label class="form-check-label" for="email_verified">Email verified</label>
+                </div>
+                <div class="form-check me-3">
+                    <input class="form-check-input" id="onboarding_complete" type="checkbox" name="onboarding_complete" {% if user.onboarding_complete %}checked{% endif %}>
+                    <label class="form-check-label" for="onboarding_complete">Onboarding complete</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" id="snapspeak_opted_in" type="checkbox" name="snapspeak_opted_in" {% if user.snapspeak_opted_in %}checked{% endif %}>
+                    <label class="form-check-label" for="snapspeak_opted_in">SnapSpeak opted in</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Save changes</button>
+            <a class="btn btn-outline-secondary" href="{{ url_for('admin.users_detail', user_id=user.id) }}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

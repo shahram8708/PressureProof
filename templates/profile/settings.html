@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Settings - PressureProof{% endblock %}
+
+{% block content %}
+<section class="container-fluid px-0">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-1">Profile Settings</h1>
+            <p class="text-secondary mb-0">Manage identity, SnapSpeak schedule, notifications, and account security.</p>
+        </div>
+    </div>
+
+    <div class="card p-4">
+        <form method="post" action="{{ url_for('profile.update_personal_settings') }}" class="mb-0">
+            {{ personal_form.hidden_tag() }}
+            <h2 class="h5 mb-3">Personal Information</h2>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="{{ personal_form.display_name.id }}" class="form-label">Display name</label>
+                    {{ personal_form.display_name(class="form-control") }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ personal_form.email.id }}" class="form-label">Email</label>
+                    {{ personal_form.email(class="form-control") }}
+                    <div class="form-text">Changing email requires re-verification before your next login.</div>
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ personal_form.country.id }}" class="form-label">Country</label>
+                    {{ personal_form.country(class="form-select") }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ personal_form.l1_language.id }}" class="form-label">First language</label>
+                    {{ personal_form.l1_language(class="form-select") }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ personal_form.professional_context.id }}" class="form-label">Professional context</label>
+                    {{ personal_form.professional_context(class="form-select") }}
+                </div>
+            </div>
+            <div class="mt-3">
+                {{ personal_form.submit_personal(class="btn btn-primary") }}
+            </div>
+        </form>
+
+        <hr class="my-4">
+
+        <form method="post" action="{{ url_for('profile.update_snapspeak_settings') }}" class="mb-0" id="snapspeakSettingsForm">
+            {{ snapspeak_form.hidden_tag() }}
+            <h2 class="h5 mb-3">SnapSpeak Settings</h2>
+            <div class="form-check form-switch mb-2">
+                {{ snapspeak_form.snapspeak_opted_in(class="form-check-input", id="snapspeakOptIn") }}
+                <label class="form-check-label" for="snapspeakOptIn">Enable SnapSpeak random challenges</label>
+            </div>
+            <div class="form-text mb-3">SnapSpeak sends random 90-second speaking challenges during your selected window. This is the core mechanism for measuring your real-world performance gap.</div>
+
+            <div id="snapspeakTimeWindow" class="row g-3 {% if not snapspeak_form.snapspeak_opted_in.data %}d-none{% endif %}">
+                <div class="col-md-6">
+                    <label for="{{ snapspeak_form.preferred_snapspeak_start.id }}" class="form-label">Preferred start time</label>
+                    {{ snapspeak_form.preferred_snapspeak_start(class="form-select") }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ snapspeak_form.preferred_snapspeak_end.id }}" class="form-label">Preferred end time</label>
+                    {{ snapspeak_form.preferred_snapspeak_end(class="form-select") }}
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h3 class="h6 mb-2">Push Notifications</h3>
+                <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
+                    <button type="button" id="enablePushBtn" class="btn btn-outline-primary btn-sm">Enable browser push notifications</button>
+                    {% if has_push_subscription %}
+                        <span id="pushStatusBadge" class="badge rounded-pill" style="background:#F59E0B; color:#111827;">Enabled</span>
+                    {% else %}
+                        <span id="pushStatusBadge" class="badge rounded-pill bg-light text-secondary">Not enabled</span>
+                    {% endif %}
+                </div>
+                <div class="form-text">Browser push delivery depends on VAPID configuration and your browser permission settings.</div>
+            </div>
+
+            <hr class="my-4">
+
+            <h2 class="h5 mb-3">Notification Preferences</h2>
+            <div class="form-check form-switch mb-2">
+                {{ snapspeak_form.weekly_report_opted_in(class="form-check-input", id="weeklyReportToggle") }}
+                <label class="form-check-label" for="weeklyReportToggle">Weekly email progress report</label>
+            </div>
+            <div class="form-check form-switch mb-3">
+                {{ snapspeak_form.session_reminder_opted_in(class="form-check-input", id="sessionReminderToggle") }}
+                <label class="form-check-label" for="sessionReminderToggle">Session reminder notifications</label>
+            </div>
+
+            <div>
+                {{ snapspeak_form.submit_snapspeak(class="btn btn-primary") }}
+            </div>
+        </form>
+
+        <hr class="my-4">
+
+        <form method="post" action="{{ url_for('profile.update_password_settings') }}" class="mb-0" id="passwordForm">
+            {{ password_form.hidden_tag() }}
+            <h2 class="h5 mb-3">Change Password</h2>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="{{ password_form.current_password.id }}" class="form-label">Current password</label>
+                    {{ password_form.current_password(class="form-control") }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ password_form.new_password.id }}" class="form-label">New password</label>
+                    {{ password_form.new_password(class="form-control", id="newPasswordInput") }}
+                    <div id="passwordStrength" class="form-text">Password strength: not evaluated</div>
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ password_form.confirm_new_password.id }}" class="form-label">Confirm new password</label>
+                    {{ password_form.confirm_new_password(class="form-control") }}
+                </div>
+            </div>
+            <div class="mt-3">
+                {{ password_form.submit_password(class="btn btn-primary") }}
+            </div>
+        </form>
+
+        <hr class="my-4">
+
+        <h2 class="h5 mb-3">Data and Privacy</h2>
+        <div class="d-flex flex-wrap gap-2">
+            <form method="post" action="{{ url_for('profile.export_profile_data') }}" class="m-0">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-secondary">Download all my data</button>
+            </form>
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">Delete my account</button>
+        </div>
+    </div>
+</section>
+
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAccountModalLabel">Delete account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{{ url_for('profile.delete_account') }}">
+                <div class="modal-body">
+                    {{ delete_form.hidden_tag() }}
+                    <p class="mb-2">This action permanently removes or anonymizes your account data. To confirm, type <strong>DELETE</strong>.</p>
+                    <label for="{{ delete_form.confirm_text.id }}" class="form-label">Confirmation text</label>
+                    {{ delete_form.confirm_text(class="form-control", placeholder="DELETE", id="deleteConfirmInput") }}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    {{ delete_form.submit_delete(class="btn btn-danger", id="deleteSubmitBtn", disabled=True) }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/push_notifications.js') }}"></script>
+<script>
+    (function () {
+        const vapidPublicKey = "{{ vapid_public_key | default('') }}";
+        const snapspeakOptIn = document.getElementById("snapspeakOptIn");
+        const windowSettings = document.getElementById("snapspeakTimeWindow");
+        const enablePushBtn = document.getElementById("enablePushBtn");
+        const pushStatusBadge = document.getElementById("pushStatusBadge");
+        const newPasswordInput = document.getElementById("newPasswordInput");
+        const passwordStrength = document.getElementById("passwordStrength");
+        const deleteConfirmInput = document.getElementById("deleteConfirmInput");
+        const deleteSubmitBtn = document.getElementById("deleteSubmitBtn");
+
+        if (snapspeakOptIn && windowSettings) {
+            snapspeakOptIn.addEventListener("change", () => {
+                windowSettings.classList.toggle("d-none", !snapspeakOptIn.checked);
+            });
+        }
+
+        if (enablePushBtn) {
+            enablePushBtn.addEventListener("click", async () => {
+                if (!window.PushNotifications) {
+                    return;
+                }
+                const enabled = await window.PushNotifications.requestPushPermission(vapidPublicKey);
+                if (enabled && pushStatusBadge) {
+                    pushStatusBadge.textContent = "Enabled";
+                    pushStatusBadge.classList.remove("bg-light", "text-secondary");
+                    pushStatusBadge.style.background = "#F59E0B";
+                    pushStatusBadge.style.color = "#111827";
+                }
+            });
+        }
+
+        if (newPasswordInput && passwordStrength) {
+            newPasswordInput.addEventListener("input", () => {
+                const value = newPasswordInput.value || "";
+                let score = 0;
+                if (value.length >= 8) score += 1;
+                if (/[A-Z]/.test(value)) score += 1;
+                if (/[a-z]/.test(value)) score += 1;
+                if (/\d/.test(value)) score += 1;
+                if (/[^A-Za-z0-9]/.test(value)) score += 1;
+
+                if (score <= 2) {
+                    passwordStrength.textContent = "Password strength: weak";
+                } else if (score <= 4) {
+                    passwordStrength.textContent = "Password strength: moderate";
+                } else {
+                    passwordStrength.textContent = "Password strength: strong";
+                }
+            });
+        }
+
+        if (deleteConfirmInput && deleteSubmitBtn) {
+            deleteConfirmInput.addEventListener("input", () => {
+                deleteSubmitBtn.disabled = deleteConfirmInput.value.trim().toUpperCase() !== "DELETE";
+            });
+        }
+    })();
+</script>
+{% endblock %}

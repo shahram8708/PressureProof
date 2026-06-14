@@ -1,0 +1,472 @@
+{% extends "base.html" %}
+{% set hide_header = True %}
+{% set hide_footer = True %}
+{% set hide_sidebar = True %}
+{% set no_sidebar = True %}
+
+{% block title %}SnapSpeak Capture - PressureProof{% endblock %}
+{% block body_class %}snapspeak-capture-body{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/snapspeak.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="snapspeak-capture-shell">
+    {% if not notifications_enabled %}
+        <div class="snapspeak-note-banner">
+            Enable SnapSpeak notifications in your settings to receive random speaking challenges throughout the day. Manual SnapSpeak is always available.
+        </div>
+    {% endif %}
+
+    <section id="statePermission" class="snapspeak-state snapspeak-permission-screen is-active" aria-live="polite">
+        <div class="pp-brand pp-brand--light pp-brand--lg snapspeak-brand">
+            <span class="pp-brand-mark" aria-hidden="true">
+                <svg class="pp-brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                    <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.282.119l.032.012.005.002.002.001.001.001.002.001a.5.5 0 0 0 .374 0l.002-.001.001-.001.002-.001.005-.002.032-.012a5.85 5.85 0 0 0 .282-.119 7.88 7.88 0 0 0 .893-.533 10.725 10.725 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.856C9.552 1.29 8.531 1.067 8 1.067c-.531 0-1.552.223-2.662.524z"/>
+                    <path d="M10.854 5.146a.5.5 0 0 1 0 .708l-3.5 3.5a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7 8.293l3.146-3.147a.5.5 0 0 1 .708 0z"/>
+                </svg>
+            </span>
+            <span class="pp-brand-text">PressureProof</span>
+        </div>
+        <h1 class="snapspeak-title">SnapSpeak</h1>
+        <p class="snapspeak-subtitle">A 90-second unscheduled speaking challenge. No preparation. No retakes.</p>
+        <button id="grantMicrophoneBtn" type="button" class="snapspeak-permission-btn" aria-label="Allow microphone">
+            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Zm4 7a.5.5 0 0 1 1 0 5 5 0 0 1-4.5 4.975V15h2a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1h2v-2.025A5 5 0 0 1 3 8a.5.5 0 0 1 1 0 4 4 0 0 0 8 0Z"/></svg>
+        </button>
+        <div class="snapspeak-permission-label">Tap to allow microphone</div>
+    </section>
+
+    <section id="stateCountdown" class="snapspeak-state snapspeak-countdown-screen" aria-live="polite">
+        <p id="countdownPrompt" class="snapspeak-prompt-text snapspeak-prompt-fade">{{ prompt_text }}</p>
+        <p class="snapspeak-ready-text">Get ready...</p>
+        <div id="countdownNumber" class="snapspeak-countdown-number">3</div>
+    </section>
+
+    <section id="stateRecording" class="snapspeak-state snapspeak-recording-screen" aria-live="polite">
+        <div class="snapspeak-recording-content">
+            <p id="recordingPrompt" class="snapspeak-prompt-text">{{ prompt_text }}</p>
+
+            <div class="snapspeak-timer-wrapper">
+                <svg class="snapspeak-timer-svg" width="140" height="140" viewBox="0 0 140 140" aria-hidden="true">
+                    <circle class="snapspeak-timer-circle-bg" cx="70" cy="70" r="64"></circle>
+                    <circle id="timerProgressCircle" class="snapspeak-timer-circle-progress" cx="70" cy="70" r="64"></circle>
+                </svg>
+                <div id="timerNumber" class="snapspeak-timer-number">90</div>
+            </div>
+
+            <div class="snapspeak-waveform-row" aria-hidden="true">
+                <div class="snapspeak-waveform-bar"></div>
+                <div class="snapspeak-waveform-bar"></div>
+                <div class="snapspeak-waveform-bar"></div>
+                <div class="snapspeak-waveform-bar"></div>
+                <div class="snapspeak-waveform-bar"></div>
+            </div>
+
+            <div class="snapspeak-recording-indicator">
+                <span class="snapspeak-dot"></span>
+                <span>Recording</span>
+            </div>
+            <p class="snapspeak-recording-hint">Speak naturally. No preparation needed.</p>
+        </div>
+    </section>
+
+    <section id="stateUploading" class="snapspeak-state snapspeak-uploading-screen" aria-live="polite">
+        <div class="spinner-border text-light" role="status" aria-hidden="true"></div>
+        <div class="snapspeak-uploading-text">Uploading...</div>
+    </section>
+
+    <section id="stateProcessing" class="snapspeak-state snapspeak-processing-screen" aria-live="polite">
+        <div class="snapspeak-processing-title">Analyzing your speech...</div>
+        <div id="processingCyclingText" class="snapspeak-cycling-text">Measuring vocabulary range...</div>
+        <div class="snapspeak-processing-bar">
+            <div id="processingBarFill" class="snapspeak-processing-bar-fill"></div>
+        </div>
+    </section>
+
+    <section id="stateFeedback" class="snapspeak-state" aria-live="polite"></section>
+
+    <section id="stateError" class="snapspeak-state snapspeak-error-screen" aria-live="assertive">
+        <div class="snapspeak-error-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.25a.75.75 0 0 1 .75.75v6.5a.75.75 0 0 1-1.5 0V2A.75.75 0 0 1 8 1.25Zm0 12a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>
+        </div>
+        <h2 class="h4 mb-2 text-white">Something went wrong</h2>
+        <p id="errorMessage" class="text-secondary mb-3">We could not process this SnapSpeak recording.</p>
+        <button id="tryAgainBtn" type="button" class="btn btn-primary">Try again</button>
+    </section>
+
+    <div id="feedbackCard" class="snapspeak-feedback-card" role="dialog" aria-live="polite" aria-label="SnapSpeak feedback">
+        <div class="snapspeak-drag-handle"></div>
+        <div class="snapspeak-feedback-title">Your SnapSpeak</div>
+        <div id="feedbackDateTime" class="snapspeak-feedback-time"></div>
+
+        <div class="snapspeak-analysis-line">
+            <span class="snapspeak-analysis-bullet line-1"></span>
+            <div id="feedbackLine1" class="snapspeak-analysis-text"></div>
+        </div>
+        <div class="snapspeak-analysis-line">
+            <span class="snapspeak-analysis-bullet line-2"></span>
+            <div id="feedbackLine2" class="snapspeak-analysis-text"></div>
+        </div>
+        <div class="snapspeak-analysis-line">
+            <span class="snapspeak-analysis-bullet line-3"></span>
+            <div id="feedbackLine3" class="snapspeak-analysis-text"></div>
+        </div>
+
+        <div class="snapspeak-tag-buttons" role="group" aria-label="Context tags">
+            <button type="button" class="btn btn-outline-secondary snapspeak-tag-btn" data-tag="work">Work</button>
+            <button type="button" class="btn btn-outline-secondary snapspeak-tag-btn" data-tag="casual">Casual</button>
+            <button type="button" class="btn btn-outline-secondary snapspeak-tag-btn" data-tag="preparation">Preparation</button>
+        </div>
+
+        <div class="snapspeak-feedback-actions">
+            <a href="{{ url_for('dashboard.index') }}" class="text-decoration-none text-secondary">Close</a>
+            <a href="{{ url_for('snapspeak.history') }}" class="text-decoration-none fw-semibold" style="color:#1E1B4B;">View history &#8594;</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/audio_recorder.js') }}"></script>
+<script src="{{ url_for('static', filename='js/push_notifications.js') }}"></script>
+<script>
+    const snapSpeakId = {{ snapspeak_record.id }};
+    const vapidPublicKey = "{{ vapid_public_key | default('') }}";
+    const statusPollUrl = "{{ url_for('api.snapspeak_status', task_id='TASK_ID_PLACEHOLDER') }}";
+    const tagUrl = "/api/snapspeak/{{ snapspeak_record.id }}/tag";
+    const submitUrl = "{{ url_for('api.submit_snapspeak') }}";
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
+
+    (function () {
+        const TOTAL_SECONDS = 90;
+        const stateElements = {
+            permission: document.getElementById("statePermission"),
+            countdown: document.getElementById("stateCountdown"),
+            recording: document.getElementById("stateRecording"),
+            uploading: document.getElementById("stateUploading"),
+            processing: document.getElementById("stateProcessing"),
+            feedback: document.getElementById("stateFeedback"),
+            error: document.getElementById("stateError"),
+        };
+
+        const grantMicrophoneBtn = document.getElementById("grantMicrophoneBtn");
+        const tryAgainBtn = document.getElementById("tryAgainBtn");
+        const countdownNumber = document.getElementById("countdownNumber");
+        const timerNumber = document.getElementById("timerNumber");
+        const timerProgressCircle = document.getElementById("timerProgressCircle");
+        const processingBarFill = document.getElementById("processingBarFill");
+        const processingCyclingText = document.getElementById("processingCyclingText");
+        const errorMessage = document.getElementById("errorMessage");
+
+        const feedbackCard = document.getElementById("feedbackCard");
+        const feedbackLine1 = document.getElementById("feedbackLine1");
+        const feedbackLine2 = document.getElementById("feedbackLine2");
+        const feedbackLine3 = document.getElementById("feedbackLine3");
+        const feedbackDateTime = document.getElementById("feedbackDateTime");
+        const tagButtons = Array.from(document.querySelectorAll(".snapspeak-tag-btn"));
+
+        const cyclingTexts = [
+            "Measuring vocabulary range...",
+            "Analyzing pause patterns...",
+            "Comparing to your baseline...",
+        ];
+
+        let recorder = null;
+        let recordingTimer = null;
+        let secondsRemaining = TOTAL_SECONDS;
+        let countdownValue = 3;
+        let countdownInterval = null;
+        let processingInterval = null;
+        let cyclingInterval = null;
+        let statusInterval = null;
+        let autoProgress = 0;
+
+        const circleRadius = 64;
+        const circleCircumference = 2 * Math.PI * circleRadius;
+        timerProgressCircle.style.strokeDasharray = String(circleCircumference);
+        timerProgressCircle.style.strokeDashoffset = "0";
+
+        function showState(stateName) {
+            Object.values(stateElements).forEach((element) => {
+                element.classList.remove("is-active");
+            });
+            const target = stateElements[stateName];
+            if (target) {
+                target.classList.add("is-active");
+            }
+        }
+
+        function clearIntervals() {
+            [countdownInterval, recordingTimer, processingInterval, cyclingInterval, statusInterval].forEach((id) => {
+                if (id) {
+                    window.clearInterval(id);
+                }
+            });
+            countdownInterval = null;
+            recordingTimer = null;
+            processingInterval = null;
+            cyclingInterval = null;
+            statusInterval = null;
+        }
+
+        function setError(message) {
+            clearIntervals();
+            if (recorder) {
+                try {
+                    recorder.stop();
+                } catch (error) {
+                    console.warn(error);
+                }
+                recorder = null;
+            }
+            errorMessage.textContent = message || "We could not process this SnapSpeak recording.";
+            showState("error");
+        }
+
+        async function ensureMicrophoneAccess() {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            stream.getTracks().forEach((track) => track.stop());
+        }
+
+        function startCountdown() {
+            clearIntervals();
+            showState("countdown");
+            countdownValue = 3;
+            countdownNumber.textContent = String(countdownValue);
+
+            countdownInterval = window.setInterval(() => {
+                countdownValue -= 1;
+                if (countdownValue <= 0) {
+                    window.clearInterval(countdownInterval);
+                    countdownInterval = null;
+                    startRecording();
+                    return;
+                }
+
+                countdownNumber.textContent = String(countdownValue);
+                countdownNumber.classList.remove("snapspeak-countdown-number");
+                void countdownNumber.offsetWidth;
+                countdownNumber.classList.add("snapspeak-countdown-number");
+            }, 1000);
+        }
+
+        function updateTimerUi() {
+            timerNumber.textContent = String(secondsRemaining);
+            const progressRatio = (TOTAL_SECONDS - secondsRemaining) / TOTAL_SECONDS;
+            const dashOffset = circleCircumference * progressRatio;
+            timerProgressCircle.style.strokeDashoffset = `${dashOffset}`;
+        }
+
+        function startRecording() {
+            showState("recording");
+            secondsRemaining = TOTAL_SECONDS;
+            updateTimerUi();
+
+            recorder = new window.AudioRecorder({
+                chunkInterval: 95000,
+                onStop: (blob) => {
+                    handleRecordingComplete(blob);
+                },
+                onError: () => {
+                    setError("Recording failed. Check microphone access and try again.");
+                },
+                onPermissionDenied: () => {
+                    setError("Microphone permission is required for SnapSpeak.");
+                },
+            });
+
+            recorder.start().then(() => {
+                recordingTimer = window.setInterval(() => {
+                    secondsRemaining -= 1;
+                    updateTimerUi();
+
+                    if (secondsRemaining <= 0) {
+                        window.clearInterval(recordingTimer);
+                        recordingTimer = null;
+                        recorder.stop();
+                    }
+                }, 1000);
+            }).catch(() => {
+                setError("Unable to start recording. Please allow microphone access and retry.");
+            });
+        }
+
+        async function handleRecordingComplete(blob) {
+            if (!blob || blob.size === 0) {
+                setError("Recorded audio is empty. Please try again.");
+                return;
+            }
+
+            showState("uploading");
+
+            const formData = new FormData();
+            formData.append("audio", blob, `snapspeak_${snapSpeakId}.webm`);
+            formData.append("snapspeak_id", String(snapSpeakId));
+
+            try {
+                const response = await fetch(submitUrl, {
+                    method: "POST",
+                    body: formData,
+                    credentials: "same-origin",
+                    headers: {
+                        "X-CSRFToken": csrfToken,
+                    },
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload.error || "Upload failed.");
+                }
+                startProcessing(payload.task_id);
+            } catch (error) {
+                setError(error.message || "Upload failed. Please try again.");
+            }
+        }
+
+        function startProcessing(taskId) {
+            showState("processing");
+            autoProgress = 0;
+            processingBarFill.style.width = "0%";
+
+            let cyclingIndex = 0;
+            processingCyclingText.style.opacity = "1";
+            processingCyclingText.textContent = cyclingTexts[cyclingIndex];
+
+            cyclingInterval = window.setInterval(() => {
+                cyclingIndex = (cyclingIndex + 1) % cyclingTexts.length;
+                processingCyclingText.style.opacity = "0";
+                window.setTimeout(() => {
+                    processingCyclingText.textContent = cyclingTexts[cyclingIndex];
+                    processingCyclingText.style.opacity = "1";
+                }, 180);
+            }, 2000);
+
+            processingInterval = window.setInterval(() => {
+                if (autoProgress < 90) {
+                    autoProgress += 0.6;
+                    processingBarFill.style.width = `${Math.min(90, autoProgress).toFixed(1)}%`;
+                }
+            }, 100);
+
+            const pollUrl = statusPollUrl.replace("TASK_ID_PLACEHOLDER", encodeURIComponent(taskId));
+            statusInterval = window.setInterval(async () => {
+                try {
+                    const response = await fetch(pollUrl, { credentials: "same-origin" });
+                    const payload = await response.json();
+                    if (!response.ok) {
+                        throw new Error(payload.message || "Unable to fetch SnapSpeak status.");
+                    }
+
+                    if (payload.status === "processing") {
+                        if (typeof payload.progress === "number") {
+                            autoProgress = Math.max(autoProgress, Math.min(99, payload.progress));
+                            processingBarFill.style.width = `${autoProgress}%`;
+                        }
+                        return;
+                    }
+
+                    if (payload.status === "completed") {
+                        clearIntervals();
+                        processingBarFill.style.width = "100%";
+                        showFeedback(payload.analysis || {});
+                        return;
+                    }
+
+                    if (payload.status === "failed") {
+                        throw new Error(payload.message || "SnapSpeak analysis failed.");
+                    }
+                } catch (error) {
+                    setError(error.message || "Could not fetch processing status.");
+                }
+            }, 3000);
+        }
+
+        function showFeedback(analysis) {
+            showState("feedback");
+            feedbackLine1.textContent = analysis.line_1 || "Vocabulary analysis is processing.";
+            feedbackLine2.textContent = analysis.line_2 || "Pause pattern analysis is processing.";
+            feedbackLine3.textContent = analysis.line_3 || "Baseline comparison is processing.";
+
+            const now = new Date();
+            feedbackDateTime.textContent = now.toLocaleString(undefined, {
+                weekday: "short",
+                day: "2-digit",
+                month: "short",
+                hour: "numeric",
+                minute: "2-digit",
+            });
+
+            feedbackCard.classList.add("pp-slide-up");
+        }
+
+        async function applyTag(tagValue) {
+            try {
+                const response = await fetch(tagUrl, {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                    body: JSON.stringify({ tag: tagValue }),
+                });
+                const payload = await response.json();
+                if (!response.ok) {
+                    throw new Error(payload.error || "Could not save tag.");
+                }
+
+                tagButtons.forEach((button) => {
+                    if (button.dataset.tag === tagValue) {
+                        button.classList.add("active");
+                    } else {
+                        button.classList.remove("active");
+                    }
+                });
+            } catch (error) {
+                console.warn(error.message);
+            }
+        }
+
+        grantMicrophoneBtn.addEventListener("click", async () => {
+            try {
+                await ensureMicrophoneAccess();
+                startCountdown();
+            } catch (error) {
+                setError("Microphone access was denied. Allow permission to continue.");
+            }
+        });
+
+        tryAgainBtn.addEventListener("click", () => {
+            window.location.href = "{{ url_for('snapspeak.capture') }}";
+        });
+
+        tagButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                applyTag(button.dataset.tag);
+            });
+        });
+
+        if (window.PushNotifications && vapidPublicKey && {{ 'true' if notifications_enabled else 'false' }}) {
+            window.PushNotifications.requestPushPermission(vapidPublicKey).catch(() => {
+                console.warn("Push subscription request was not completed.");
+            });
+        }
+
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: "microphone" }).then((result) => {
+                if (result.state === "granted") {
+                    window.setTimeout(() => {
+                        ensureMicrophoneAccess()
+                            .then(startCountdown)
+                            .catch(() => {
+                                showState("permission");
+                            });
+                    }, 500);
+                }
+            }).catch(() => {
+                showState("permission");
+            });
+        }
+    })();
+</script>
+{% endblock %}

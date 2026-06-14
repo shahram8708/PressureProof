@@ -1,0 +1,242 @@
+.pp-app-layout {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.pp-main-content {
+    min-width: 0;
+}
+
+@media (min-width: 768px) {
+    .pp-sidebar {
+        position: sticky;
+        height: fit-content;
+    }
+}
+
+.pp-readiness-card {
+    border-top: 3px solid var(--color-accent);
+    border-radius: 12px;
+    padding: 1.5rem;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.pp-readiness-value {
+    font-size: 4rem;
+    color: var(--color-primary);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.pp-pgi-mini {
+    background: var(--color-surface);
+}
+
+.pp-sparkline-wrap {
+    position: relative;
+    height: 60px;
+}
+
+.pp-pgi-number {
+    font-size: 3rem;
+    color: var(--color-primary);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.pp-sparkline-wrap canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+.pp-action-card {
+    background: #FEF3C7;
+    border: 1px solid var(--color-accent);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.pp-stat-card {
+    border-radius: 10px;
+    padding: 1.25rem;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
+}
+
+.pp-stat-value {
+    font-size: 2rem;
+    color: var(--color-primary);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.pp-stat-label {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.35rem;
+}
+
+.pp-snapspeak-mini {
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.pp-snapspeak-mini:last-child {
+    border-bottom: none;
+}
+
+.pp-snapspeak-prompt {
+    font-size: 14px;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.pp-snapspeak-analysis {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    font-style: italic;
+}
+
+.pp-nav-active {
+    border-left: 3px solid var(--color-accent) !important;
+    background-color: rgba(245, 158, 11, 0.08);
+    font-weight: 600;
+    color: var(--color-primary) !important;
+}
+
+.pp-sidebar-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pp-sidebar-nav li {
+    margin-bottom: 0.25rem;
+}
+
+.pp-sidebar-nav a {
+    font-size: 15px;
+    padding: 0.625rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-radius: 8px;
+    border-left: 3px solid transparent;
+    transition: background 0.15s ease;
+}
+
+.pp-sidebar-nav a:hover {
+    background: rgba(17, 24, 39, 0.05);
+}
+
+.pp-bottom-nav {
+    height: 64px;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+}
+
+.pp-bottom-nav a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 0.5rem;
+    color: var(--color-text-secondary);
+    font-size: 10px;
+    text-decoration: none;
+    line-height: 1;
+}
+
+.pp-bottom-nav a.active {
+    color: var(--color-accent);
+}
+
+.pp-chart-radar-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 1rem;
+    position: relative;
+}
+
+.pp-chart-empty {
+    opacity: 0.6;
+}
+
+.pp-chart-empty::after {
+    content: "No data";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+}
+
+.pp-lsrc-dimension-card {
+    border-radius: 10px;
+    padding: 1.25rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+}
+
+.pp-dimension-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.pp-gap-value {
+    font-size: 13px;
+}
+
+.pp-trend-improving {
+    color: var(--color-accent);
+}
+
+.pp-trend-stable {
+    color: var(--color-text-secondary);
+}
+
+.pp-trend-declining {
+    color: #4B5563;
+}
+
+.pp-focus-card {
+    border-left: 4px solid var(--color-accent);
+    border-radius: 0 10px 10px 0;
+    padding: 1.25rem;
+    background: var(--color-accent-100);
+}
+
+.pp-projection-card {
+    border-left: 4px solid var(--color-accent);
+    border-radius: 0 10px 10px 0;
+    padding: 1.25rem;
+    background: var(--color-accent-100);
+}
+
+@media (max-width: 767.98px) {
+    .pp-readiness-value {
+        font-size: 3rem;
+    }
+
+    .pp-mobile-content-pad {
+        padding-bottom: 70px;
+    }
+}

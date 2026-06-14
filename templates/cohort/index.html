@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Cohort Benchmarking - PressureProof{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pp-cohort-label-card {
+        border-top: 3px solid #1E1B4B;
+    }
+
+    .pp-cohort-hero {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+
+    .pp-cohort-hero-value {
+        font-size: clamp(2.8rem, 8vw, 4rem);
+        line-height: 1;
+        font-weight: 700;
+        color: #1E1B4B;
+    }
+
+    .pp-cohort-bar {
+        height: 10px;
+        border-radius: 5px;
+        overflow: hidden;
+        background: #F3F4F6;
+    }
+
+    .pp-cohort-note {
+        font-size: 0.84rem;
+        color: #6B7280;
+    }
+
+    .pp-cohort-footer-note {
+        font-size: 0.88rem;
+        color: #6B7280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="container-fluid">
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card pp-cohort-label-card p-4">
+                <h1 class="h5 fw-semibold mb-2">Your Cohort</h1>
+                <div class="h3 fw-bold mb-2" style="color:#1E1B4B;">{{ cohort_label }}</div>
+                <p class="mb-1 text-secondary">{{ cohort_user_count or 0 }} professionals in your cohort.</p>
+                <p class="mb-0 text-secondary">Your scores are compared against anonymous data from professionals with a similar background, language, and English proficiency level.</p>
+            </div>
+        </div>
+
+        {% if limited_data_message %}
+        <div class="col-12">
+            <div class="alert alert-info mb-0">
+                {{ limited_data_message }}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="col-12">
+            <div class="card pp-cohort-hero">
+                {% set overall = percentile_data.get('overall_percentile') %}
+                <div class="pp-cohort-hero-value">{{ overall | round(1) if overall is not none else 'n/a' }}</div>
+                <p class="lead mt-2 mb-3">Your PGI is better than {{ overall | round(1) if overall is not none else 0 }}% of {{ cohort_label }} professionals.</p>
+                <div class="progress mx-auto" style="max-width:540px;height:12px;background:#F3F4F6;">
+                    <div class="progress-bar" role="progressbar" style="width: {{ overall if overall is not none else 0 }}%; background:#F59E0B;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card p-4">
+                <h2 class="h5 mb-4">Your percentile by dimension.</h2>
+
+                {% for dimension, label in [
+                    ('lexical_diversity', 'Lexical Diversity'),
+                    ('syntactic_complexity', 'Syntactic Complexity'),
+                    ('prosodic_confidence', 'Prosodic Confidence'),
+                    ('disfluency_rate', 'Disfluency Rate'),
+                    ('sentence_completion', 'Sentence Completion'),
+                    ('recovery_speed', 'Recovery Speed')
+                ] %}
+                {% set row = percentile_data.get(dimension, {}) %}
+                {% set pct = row.get('percentile') %}
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="fw-semibold">{{ label }}</div>
+                        <div class="text-secondary">{{ pct | round(1) if pct is not none else 0 }}th percentile</div>
+                    </div>
+                    <div class="pp-cohort-bar">
+                        <div class="h-100" style="width: {{ pct if pct is not none else 0 }}%; background:#F59E0B;"></div>
+                    </div>
+                    <div class="pp-cohort-note mt-1">Better than {{ pct | round(1) if pct is not none else 0 }}% of your cohort.</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card p-4 h-100">
+                <h2 class="h5 mb-1">PGI Distribution in Your Cohort</h2>
+                <p class="text-secondary mb-3">Where you sit within the distribution of PressureProof users with your background.</p>
+                <div style="height: 320px; position: relative;">
+                    <canvas id="cohortBellCurve"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card p-4 h-100">
+                <h2 class="h5 mb-3">Your profile vs. cohort medians.</h2>
+                <div style="height: 320px; position: relative;">
+                    <canvas id="cohortRadar"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <p class="pp-cohort-footer-note mb-0">All comparisons are anonymous. No individual user data is ever visible. Cohort data updated nightly.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/lsrc_chart.js') }}"></script>
+<script>
+    const bellCurveData = {{ distribution_data | tojson | safe }};
+    const cohortRadarData = {{ radar_comparison_data | tojson | safe }};
+    const percentileData = {{ percentile_data | tojson | safe }};
+
+    (function initBellCurve() {
+        const canvas = document.getElementById("cohortBellCurve");
+        if (!canvas || typeof Chart === "undefined") {
+            return;
+        }
+
+        const points = (bellCurveData.labels || []).map(function (label, index) {
+            return {
+                x: Number(label),
+                y: Number((bellCurveData.frequencies || [])[index] || 0),
+            };
+        });
+
+        const userPgi = Number(((percentileData.pgi || {}).user_score || 0));
+
+        const markerPlugin = {
+            id: "pgiMarker",
+            afterDraw(chart) {
+                const xScale = chart.scales.x;
+                const yScale = chart.scales.y;
+                if (!xScale || !yScale) {
+                    return;
+                }
+
+                const x = xScale.getPixelForValue(userPgi);
+                const yTop = yScale.getPixelForValue(yScale.max);
+                const yBottom = yScale.getPixelForValue(yScale.min);
+
+                const ctx = chart.ctx;
+                ctx.save();
+                ctx.strokeStyle = "#F59E0B";
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(x, yTop);
+                ctx.lineTo(x, yBottom);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = "#F59E0B";
+                ctx.fillText("You", x + 6, yTop + 12);
+                ctx.restore();
+            },
+        };
+
+        new Chart(canvas, {
+            type: "line",
+            data: {
+                datasets: [
+                    {
+                        label: "Cohort Distribution",
+                        data: points,
+                        borderColor: "#4F46E5",
+                        backgroundColor: "rgba(79,70,229,0.10)",
+                        fill: true,
+                        tension: 0.38,
+                        pointRadius: 0,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                parsing: false,
+                scales: {
+                    x: {
+                        type: "linear",
+                        min: 0,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: "PGI Score (lower is better)",
+                            color: "#111827",
+                        },
+                    },
+                    y: {
+                        display: false,
+                        min: 0,
+                        max: 100,
+                    },
+                },
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                },
+            },
+            plugins: [markerPlugin],
+        });
+    })();
+
+    (function initRadar() {
+        if (typeof window.initLsrcChart === "function") {
+            window.initLsrcChart("cohortRadar", cohortRadarData);
+        }
+    })();
+</script>
+{% endblock %}

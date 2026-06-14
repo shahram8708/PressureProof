@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% set hide_sidebar = True %}
+{% set no_sidebar = True %}
+
+{% block title %}Create your account{% endblock %}
+
+{% block content %}
+<section class="py-5" style="background: #F9FAFB; min-height: calc(100vh - 64px);">
+    <div class="container py-4">
+        <div class="card mx-auto shadow-lg border-0" style="max-width: 480px; border-radius: 16px;">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="d-flex justify-content-center mb-2">
+                        <a href="{{ url_for('public.index') }}" class="pp-brand pp-brand--lg" aria-label="PressureProof home">
+                            <span class="pp-brand-mark" aria-hidden="true">
+                                <svg class="pp-brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                    <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.282.119l.032.012.005.002.002.001.001.001.002.001a.5.5 0 0 0 .374 0l.002-.001.001-.001.002-.001.005-.002.032-.012a5.85 5.85 0 0 0 .282-.119 7.88 7.88 0 0 0 .893-.533 10.725 10.725 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.856C9.552 1.29 8.531 1.067 8 1.067c-.531 0-1.552.223-2.662.524z"/>
+                                    <path d="M10.854 5.146a.5.5 0 0 1 0 .708l-3.5 3.5a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7 8.293l3.146-3.147a.5.5 0 0 1 .708 0z"/>
+                                </svg>
+                            </span>
+                            <span class="pp-brand-text">PressureProof</span>
+                        </a>
+                    </div>
+                    <h2 class="h3 mt-3 mb-0">Create your account.</h2>
+                </div>
+
+                <form method="post" action="{{ url_for('auth.register_post') }}" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="form-floating mb-3">
+                        {{ form.email(class="form-control", id="email", placeholder="name@example.com") }}
+                        <label for="email">Email</label>
+                    </div>
+                    {% for error in form.email.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+
+                    <div class="form-floating mb-2">
+                        {{ form.password(class="form-control", id="password", placeholder="Create a password") }}
+                        <label for="password">Password</label>
+                    </div>
+                    <div class="progress mb-2" style="height: 6px;">
+                        <div id="passwordStrengthBar" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                    </div>
+                    <div id="passwordStrengthText" class="small text-secondary mb-2">Use at least 8 characters with one uppercase letter and one number.</div>
+                    {% for error in form.password.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+
+                    <div class="form-floating mb-2">
+                        {{ form.confirm_password(class="form-control", id="confirmPassword", placeholder="Confirm password") }}
+                        <label for="confirmPassword">Confirm password</label>
+                    </div>
+                    <div id="passwordMatchText" class="small mb-3 text-secondary">Enter the same password to confirm.</div>
+                    {% for error in form.confirm_password.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+
+                    <div class="form-floating mb-3">
+                        {{ form.country(class="form-select", id="country") }}
+                        <label for="country">Country</label>
+                    </div>
+                    {% for error in form.country.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+
+                    <div class="form-floating mb-3">
+                        {{ form.l1_language(class="form-select", id="l1Language") }}
+                        <label for="l1Language">First language</label>
+                    </div>
+                    {% for error in form.l1_language.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+
+                    <div class="form-floating mb-4">
+                        {{ form.professional_context(class="form-select", id="professionalContext") }}
+                        <label for="professionalContext">Professional context</label>
+                    </div>
+                    {% for error in form.professional_context.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+
+                    <button type="submit" class="btn btn-primary w-100">Create account</button>
+
+                    <p class="small text-secondary mt-3 mb-2">Your speech data is encrypted and never shared with third parties. See our <a href="{{ url_for('public.privacy') }}">Privacy Policy</a>.</p>
+                    <p class="text-center mb-0">Already have an account? <a href="{{ url_for('auth.login_get') }}">Log in</a>.</p>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const passwordInput = document.getElementById("password");
+        const confirmInput = document.getElementById("confirmPassword");
+        const strengthBar = document.getElementById("passwordStrengthBar");
+        const strengthText = document.getElementById("passwordStrengthText");
+        const matchText = document.getElementById("passwordMatchText");
+
+        function scorePassword(value) {
+            let score = 0;
+            if (value.length >= 8) score += 25;
+            if (/[A-Z]/.test(value)) score += 25;
+            if (/\d/.test(value)) score += 25;
+            if (/[^A-Za-z0-9]/.test(value)) score += 25;
+            return score;
+        }
+
+        function updateStrength() {
+            const value = passwordInput.value || "";
+            const score = scorePassword(value);
+            strengthBar.style.width = score + "%";
+
+            if (score <= 25) {
+                strengthBar.className = "progress-bar bg-danger";
+                strengthText.textContent = "Weak password";
+            } else if (score <= 50) {
+                strengthBar.className = "progress-bar bg-warning";
+                strengthText.textContent = "Moderate password";
+            } else if (score <= 75) {
+                strengthBar.className = "progress-bar bg-warning";
+                strengthText.textContent = "Good password";
+            } else {
+                strengthBar.className = "progress-bar";
+                strengthBar.style.backgroundColor = "#4F46E5";
+                strengthText.textContent = "Strong password";
+            }
+        }
+
+        function updateMatchState() {
+            const pw = passwordInput.value || "";
+            const cpw = confirmInput.value || "";
+
+            if (!cpw.length) {
+                matchText.className = "small mb-3 text-secondary";
+                matchText.textContent = "Enter the same password to confirm.";
+                return;
+            }
+
+            if (pw === cpw) {
+                matchText.className = "small mb-3 text-success";
+                matchText.textContent = "\u2713 Passwords match";
+            } else {
+                matchText.className = "small mb-3 text-danger";
+                matchText.textContent = "\u2715 Passwords do not match";
+            }
+        }
+
+        passwordInput.addEventListener("input", function () {
+            updateStrength();
+            updateMatchState();
+        });
+        confirmInput.addEventListener("input", updateMatchState);
+
+        updateStrength();
+        updateMatchState();
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,526 @@
+.snapspeak-capture-body {
+    margin: 0;
+    padding: 0;
+    background: #1E1B4B;
+    min-height: 100vh;
+    color: #FFFFFF;
+    font-family: "Inter", "Segoe UI", sans-serif;
+    overflow: hidden;
+}
+
+.snapspeak-capture-shell {
+    position: relative;
+    min-height: 100vh;
+    background: radial-gradient(circle at 20% 10%, rgba(99, 102, 241, 0.28), transparent 45%),
+                radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.2), transparent 35%),
+                #1E1B4B;
+}
+
+.snapspeak-state {
+    display: none;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.snapspeak-state.is-active {
+    display: flex;
+}
+
+.snapspeak-permission-screen,
+.snapspeak-countdown-screen,
+.snapspeak-recording-screen,
+.snapspeak-uploading-screen,
+.snapspeak-processing-screen,
+.snapspeak-error-screen {
+    width: 100%;
+}
+
+.snapspeak-brand {
+    margin-bottom: 1.25rem;
+}
+
+.snapspeak-note-banner {
+    position: fixed;
+    top: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    background: rgba(249, 250, 251, 0.15);
+    border: 1px solid rgba(165, 180, 252, 0.45);
+    border-radius: 999px;
+    color: #E0E7FF;
+    font-size: 12px;
+    padding: 0.5rem 0.9rem;
+    max-width: min(96vw, 640px);
+}
+
+.snapspeak-title {
+    font-size: 28px;
+    font-weight: 300;
+    margin-bottom: 0.45rem;
+}
+
+.snapspeak-subtitle {
+    color: rgba(199, 210, 254, 0.9);
+    font-size: 14px;
+    max-width: 540px;
+    margin-bottom: 1.4rem;
+}
+
+.snapspeak-permission-btn {
+    border: 0;
+    width: 80px;
+    height: 80px;
+    border-radius: 999px;
+    background: #F59E0B;
+    color: #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 30px rgba(245, 158, 11, 0.35);
+}
+
+.snapspeak-permission-label {
+    margin-top: 0.75rem;
+    color: #A5B4FC;
+    font-size: 14px;
+}
+
+.snapspeak-prompt-text {
+    font-size: 1.375rem;
+    line-height: 1.75;
+    color: #FFFFFF;
+    text-align: center;
+    max-width: 480px;
+    padding: 0 1.5rem;
+}
+
+.snapspeak-prompt-fade {
+    animation: promptFadeIn 0.45s ease forwards;
+    opacity: 0;
+}
+
+@keyframes promptFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.snapspeak-ready-text {
+    margin-top: 1.1rem;
+    color: rgba(165, 180, 252, 0.95);
+    font-size: 14px;
+}
+
+.snapspeak-countdown-number {
+    font-size: 8rem;
+    font-weight: 700;
+    color: #F59E0B;
+    line-height: 1;
+    text-align: center;
+    animation: fadeCountdown 0.8s ease-in-out;
+}
+
+@keyframes fadeCountdown {
+    0% {
+        opacity: 0;
+        transform: scale(1.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+}
+
+.snapspeak-recording-content {
+    padding-top: 12vh;
+}
+
+.snapspeak-timer-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 140px;
+    height: 140px;
+    margin: 1rem auto 0.65rem;
+}
+
+.snapspeak-timer-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: rotate(-90deg);
+}
+
+.snapspeak-timer-circle-bg {
+    fill: none;
+    stroke: rgba(245, 158, 11, 0.2);
+    stroke-width: 6;
+}
+
+.snapspeak-timer-circle-progress {
+    fill: none;
+    stroke: #F59E0B;
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear;
+}
+
+.snapspeak-timer-number {
+    font-size: 4.5rem;
+    font-weight: 700;
+    color: #F59E0B;
+    z-index: 1;
+    line-height: 1;
+}
+
+.snapspeak-waveform-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 30px;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.snapspeak-waveform-bar {
+    width: 5px;
+    background: rgba(245, 158, 11, 0.8);
+    border-radius: 3px;
+    min-height: 3px;
+    animation: snapspeakWave 1.15s ease-in-out infinite;
+}
+
+.snapspeak-waveform-bar:nth-child(2) {
+    animation-delay: 0.14s;
+}
+
+.snapspeak-waveform-bar:nth-child(3) {
+    animation-delay: 0.26s;
+}
+
+.snapspeak-waveform-bar:nth-child(4) {
+    animation-delay: 0.39s;
+}
+
+.snapspeak-waveform-bar:nth-child(5) {
+    animation-delay: 0.53s;
+}
+
+@keyframes snapspeakWave {
+    0%,
+    100% {
+        height: 5px;
+    }
+    50% {
+        height: 27px;
+    }
+}
+
+.snapspeak-recording-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+    color: #FCD34D;
+    font-size: 13px;
+}
+
+.snapspeak-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #F59E0B;
+    animation: snapPulse 1s ease-in-out infinite;
+}
+
+@keyframes snapPulse {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.4;
+    }
+}
+
+.snapspeak-recording-hint {
+    margin-top: 1.2rem;
+    color: rgba(165, 180, 252, 0.9);
+    font-size: 12px;
+}
+
+.snapspeak-uploading-screen .spinner-border {
+    width: 2.3rem;
+    height: 2.3rem;
+}
+
+.snapspeak-uploading-text,
+.snapspeak-processing-title {
+    margin-top: 0.95rem;
+    color: #FFFFFF;
+    font-size: 18px;
+}
+
+.snapspeak-processing-screen {
+    background: linear-gradient(125deg, rgba(30, 27, 75, 1), rgba(49, 46, 129, 0.9), rgba(30, 27, 75, 1));
+    background-size: 180% 180%;
+    animation: snapspeakGradient 8s ease infinite;
+}
+
+@keyframes snapspeakGradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.snapspeak-cycling-text {
+    font-size: 14px;
+    color: rgba(165, 180, 252, 0.9);
+    text-align: center;
+    min-height: 20px;
+    transition: opacity 0.3s ease;
+    margin-top: 0.8rem;
+}
+
+.snapspeak-processing-bar {
+    width: 100%;
+    max-width: 300px;
+    height: 3px;
+    background: rgba(245, 158, 11, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.snapspeak-processing-bar-fill {
+    height: 100%;
+    background: #F59E0B;
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+.snapspeak-feedback-card {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #FFFFFF;
+    border-radius: 24px 24px 0 0;
+    padding: 1.25rem 1.5rem 2rem;
+    transform: translateY(100%);
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
+    min-height: 55vh;
+    color: #111827;
+}
+
+.snapspeak-feedback-card.pp-slide-up {
+    transform: translateY(0);
+}
+
+.snapspeak-drag-handle {
+    width: 40px;
+    height: 4px;
+    background: #D1D5DB;
+    border-radius: 2px;
+    margin: 0 auto 1.25rem;
+}
+
+.snapspeak-feedback-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1E1B4B;
+}
+
+.snapspeak-feedback-time {
+    font-size: 13px;
+    color: #6B7280;
+    margin-bottom: 0.5rem;
+}
+
+.snapspeak-analysis-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.snapspeak-analysis-line:last-child {
+    border-bottom: none;
+}
+
+.snapspeak-analysis-bullet {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+}
+
+.snapspeak-analysis-bullet.line-1 {
+    background: #F59E0B;
+}
+
+.snapspeak-analysis-bullet.line-2 {
+    background: #4F46E5;
+}
+
+.snapspeak-analysis-bullet.line-3 {
+    background: #9CA3AF;
+}
+
+.snapspeak-analysis-text {
+    font-size: 13px;
+    color: #374151;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+.snapspeak-tag-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.snapspeak-tag-btn {
+    padding: 0.25rem 0.875rem;
+    font-size: 13px;
+    border-radius: 20px;
+}
+
+.snapspeak-tag-btn.active,
+.snapspeak-tag-btn:active {
+    background: #F59E0B;
+    border-color: #F59E0B;
+    color: #111827;
+}
+
+.snapspeak-feedback-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.snapspeak-error-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: rgba(245, 158, 11, 0.2);
+    color: #F59E0B;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.8rem;
+}
+
+.snapspeak-history-page .snapspeak-filter .nav-link {
+    border-radius: 999px;
+    color: #374151;
+    border: 1px solid #E5E7EB;
+    margin-right: 0.35rem;
+}
+
+.snapspeak-history-page .snapspeak-filter .nav-link.active {
+    background: #F59E0B;
+    border-color: #F59E0B;
+    color: #111827;
+}
+
+.snapspeak-stat-pill {
+    border: 1px solid #E5E7EB;
+    border-radius: 999px;
+    padding: 0.4rem 0.75rem;
+    font-size: 12px;
+    color: #374151;
+    background: #FFFFFF;
+}
+
+.snapspeak-history-card {
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    background: #FFFFFF;
+    box-shadow: 0 8px 18px rgba(17, 24, 39, 0.05);
+}
+
+.snapspeak-notable-badge {
+    background: #F59E0B;
+    color: #111827;
+    font-size: 12px;
+    border-radius: 999px;
+    padding: 0.25rem 0.55rem;
+}
+
+.snapspeak-prompt-compact {
+    color: #1E1B4B;
+    font-size: 14px;
+    line-height: 1.45;
+    margin-bottom: 0.4rem;
+}
+
+.snapspeak-prompt-compact.clamped {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.snapspeak-analysis-mini {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    font-size: 12px;
+    color: #6B7280;
+    font-style: italic;
+    margin-bottom: 0.2rem;
+}
+
+.snapspeak-analysis-square {
+    width: 7px;
+    height: 7px;
+    border-radius: 1px;
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+.snapspeak-empty-card {
+    border-top: 3px solid #1E1B4B;
+}
+
+@media (max-width: 767.98px) {
+    .snapspeak-countdown-number {
+        font-size: 6.5rem;
+    }
+
+    .snapspeak-prompt-text {
+        font-size: 1.15rem;
+    }
+
+    .snapspeak-feedback-card {
+        min-height: 62vh;
+        padding-bottom: 1.2rem;
+    }
+}

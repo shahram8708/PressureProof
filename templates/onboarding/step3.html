@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Step 3 of 3 | PressureProof{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-shell {
+        max-width: 980px;
+    }
+
+    .dimension-row {
+        margin-bottom: 1rem;
+    }
+
+    .dimension-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .dimension-meta {
+        font-size: 0.85rem;
+        color: var(--color-text-secondary);
+        margin-top: 0.3rem;
+    }
+
+    .failure-mode-card {
+        background: #FEF3C7;
+        border-left: 4px solid var(--color-primary);
+        border-radius: 8px;
+        padding: 1.25rem;
+    }
+
+    .narrative-card {
+        border: 1px solid rgba(30, 27, 75, 0.25);
+        border-radius: var(--radius-md);
+        background: #FFFFFF;
+        padding: 1rem;
+    }
+
+    .profile-cta-btn {
+        width: 100%;
+    }
+
+    @media (min-width: 768px) {
+        .profile-cta-btn {
+            width: auto;
+            min-width: 340px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="container py-4 py-md-5 profile-shell">
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="small text-secondary">Step 3 of 3 - Your Pressure Profile</span>
+            <span class="small text-secondary">100%</span>
+        </div>
+        <div class="progress" role="progressbar" aria-label="Onboarding progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" style="height: 0.75rem;">
+            <div class="progress-bar" style="width: 100%;"></div>
+        </div>
+    </div>
+
+    <h1 class="h3 mb-2">Here is how your English behaves under pressure.</h1>
+    <p class="text-secondary mb-4">This is your starting point, not a grade, a map. Every number here has a direction: down.</p>
+
+    <div class="pressure-profile-card mb-4">
+        <div class="pgi-display mb-4">
+            <div class="pgi-display__value">
+                {% if pgi_estimate is not none %}
+                    {{ '%.1f'|format(pgi_estimate) }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+            <div class="pgi-display__label">Preparation Gap Index</div>
+            <p class="small text-secondary mb-0 mt-2">This number represents the gap between your prepared English and your English under stress. Lower is better. This is your Day 0.</p>
+            <p class="small text-secondary mt-1 mb-0">This estimate is based on your first baseline and will become more accurate as sessions and SnapSpeaks accumulate.</p>
+        </div>
+
+        {% set lexical_score = (spontaneous_score.lexical_diversity or 0)|float %}
+        {% set syntactic_score = (spontaneous_score.syntactic_complexity or 0)|float %}
+        {% set prosodic_score = (spontaneous_score.prosodic_confidence or 0)|float %}
+        {% set disfluency_score = (spontaneous_score.disfluency_rate or 0)|float %}
+        {% set completion_score = (spontaneous_score.sentence_completion or 0)|float %}
+        {% set recovery_score = (spontaneous_score.recovery_speed_score or 0)|float %}
+        {% set recovery_seconds = (spontaneous_score.recovery_speed_seconds or 0)|float %}
+
+        <div class="dimension-row">
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Lexical Diversity</span>
+                <strong>{{ '%.1f'|format(lexical_score) }}</strong>
+            </div>
+            <div class="dimension-score-bar"><div class="dimension-score-fill" style="width: {{ lexical_score }}%;"></div></div>
+            <div class="dimension-meta">Range of vocabulary you use.</div>
+        </div>
+
+        <div class="dimension-row">
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Syntactic Complexity</span>
+                <strong>{{ '%.1f'|format(syntactic_score) }}</strong>
+            </div>
+            <div class="dimension-score-bar"><div class="dimension-score-fill" style="width: {{ syntactic_score }}%;"></div></div>
+            <div class="dimension-meta">Complexity of your sentence structures.</div>
+        </div>
+
+        <div class="dimension-row">
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Prosodic Confidence</span>
+                <strong>{{ '%.1f'|format(prosodic_score) }}</strong>
+            </div>
+            <div class="dimension-score-bar"><div class="dimension-score-fill" style="width: {{ prosodic_score }}%;"></div></div>
+            <div class="dimension-meta">Vocal delivery and pitch stability.</div>
+        </div>
+
+        <div class="dimension-row">
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Disfluency Rate (higher means fewer fillers and pauses)</span>
+                <strong>{{ '%.1f'|format(disfluency_score) }}</strong>
+            </div>
+            <div class="dimension-score-bar"><div class="dimension-score-fill" style="width: {{ disfluency_score }}%;"></div></div>
+            <div class="dimension-meta">Frequency of filler words and pauses.</div>
+        </div>
+
+        <div class="dimension-row">
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Sentence Completion</span>
+                <strong>{{ '%.1f'|format(completion_score) }}</strong>
+            </div>
+            <div class="dimension-score-bar"><div class="dimension-score-fill" style="width: {{ completion_score }}%;"></div></div>
+            <div class="dimension-meta">Proportion of sentences you complete.</div>
+        </div>
+
+        <div class="dimension-row">
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Recovery Speed</span>
+                <strong>{{ '%.1f'|format(recovery_seconds) }} seconds average</strong>
+            </div>
+            <div class="dimension-score-bar"><div class="dimension-score-fill" style="width: {{ recovery_score }}%;"></div></div>
+            <div class="dimension-meta">Time to recover from a breakdown, lower is better.</div>
+        </div>
+    </div>
+
+    <div class="failure-mode-card mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-2">
+            <h2 class="h5 mb-0">{{ failure_mode.mode_label if failure_mode else 'Assessing your profile' }}</h2>
+            <span class="badge bg-primary">{{ failure_mode.confidence_label if failure_mode else 'Estimated' }}</span>
+        </div>
+        <p class="mb-0">{{ failure_mode.mode_description if failure_mode else 'We need a few more sessions before we can identify your primary stress pattern. Keep going.' }}</p>
+    </div>
+
+    <div class="narrative-card mb-4">
+        <p class="mb-0">{{ narrative }}</p>
+    </div>
+
+    <form method="post" action="{{ url_for('onboarding.complete_onboarding') }}" class="text-center">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-primary px-4 py-2 profile-cta-btn">Start my first training session &rarr;</button>
+        <p class="small text-secondary mt-2 mb-0">Your first session will be gentle, we introduce stress gradually.</p>
+    </form>
+</section>
+{% endblock %}

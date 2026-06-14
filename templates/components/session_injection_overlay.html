@@ -1,0 +1,46 @@
+<div id="temporalInjection" class="injection-overlay pp-temporal-injection hidden" role="alert" aria-live="assertive">
+    <div id="temporalCountdown" class="pp-temporal-countdown">20</div>
+    <div class="small text-secondary">seconds remaining</div>
+</div>
+
+<div id="distractorInjection" class="injection-overlay pp-distractor-injection hidden" aria-live="polite">
+    <div class="small fw-semibold mb-2">Count the dots:</div>
+    <div class="pp-distractor-dot-grid" id="distractorDotGrid">
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+        <span class="pp-distractor-dot"></span>
+    </div>
+</div>
+
+<div id="interlocutorInjection" class="injection-overlay pp-interlocutor-injection hidden" aria-live="polite">
+    <img
+        id="interlocutorAvatar"
+        src="{{ url_for('static', filename='img/avatars/avatar_neutral.svg') }}"
+        alt="Listener avatar"
+        class="pp-avatar-image"
+    >
+    <div class="small text-secondary mt-1">Listener</div>
+</div>
+
+<div id="topicPivotInjection" class="injection-overlay pp-topic-pivot-injection hidden" role="dialog" aria-live="assertive">
+    <div class="d-flex align-items-start justify-content-between gap-3">
+        <div>
+            <h4 class="h6 mb-2" style="color:#1E1B4B;">New direction:</h4>
+            <p id="topicPivotQuestion" class="mb-0 fw-semibold" style="font-size:18px; color:#1E1B4B;"></p>
+        </div>
+        <button id="topicPivotDismiss" type="button" class="btn btn-link btn-sm p-0" style="color:#1E1B4B; text-decoration:none;">Continue →</button>
+    </div>
+</div>

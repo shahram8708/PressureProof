@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" role="img" aria-label="Impatient avatar">
+  <rect width="120" height="120" rx="20" fill="#FEF3C7"/>
+  <polygon points="18,96 36,18 84,10 102,90" fill="#1E1B4B"/>
+  <circle cx="46" cy="42" r="4" fill="#F59E0B"/>
+  <circle cx="74" cy="42" r="4" fill="#F59E0B"/>
+  <path d="M44 60c8-6 24-6 32 0" stroke="#F59E0B" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <line x1="26" y1="22" x2="36" y2="30" stroke="#F59E0B" stroke-width="3"/>
+  <line x1="94" y1="20" x2="84" y2="30" stroke="#F59E0B" stroke-width="3"/>
+</svg>

@@ -1,0 +1,126 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Analytics - PressureProof Admin{% endblock %}
+
+{% block content %}
+<section>
+    <div class="admin-section-title mb-3">
+        <h1 class="h4 mb-0">Analytics</h1>
+        <div class="text-secondary small">Behavior and growth metrics across users, sessions, and outcomes.</div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-xl-6">
+            <div class="admin-card">
+                <h2 class="h6 mb-2">Registrations (90 days)</h2>
+                <div class="admin-chart-wrap"><canvas id="registrationsChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="admin-card">
+                <h2 class="h6 mb-2">Sessions (30 days)</h2>
+                <div class="admin-chart-wrap"><canvas id="sessionsChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="admin-card">
+                <h2 class="h6 mb-2">SnapSpeaks (30 days)</h2>
+                <div class="admin-chart-wrap"><canvas id="snapspeaksChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="admin-card">
+                <h2 class="h6 mb-2">Conversion Funnel</h2>
+                <div class="admin-chart-wrap"><canvas id="funnelChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="admin-card">
+                <h2 class="h6 mb-2">PGI Distribution</h2>
+                <div class="admin-chart-wrap"><canvas id="pgiDistributionChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="admin-card">
+                <h2 class="h6 mb-2">Professional Context</h2>
+                <div class="admin-chart-wrap"><canvas id="contextChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="admin-card">
+                <h2 class="h6 mb-2">L1 Language Distribution</h2>
+                <div class="admin-chart-wrap"><canvas id="l1Chart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="admin-card">
+                <h2 class="h6 mb-2">Cohort Median PGI</h2>
+                <div class="admin-chart-wrap"><canvas id="cohortChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const payload = {{ analytics_payload | tojson | safe }};
+
+    function lineChart(elementId, data, label, color) {
+        const canvas = document.getElementById(elementId);
+        if (!canvas) {
+            return;
+        }
+        new Chart(canvas, {
+            type: "line",
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label,
+                    data: data.data,
+                    borderColor: color,
+                    backgroundColor: "rgba(37,99,235,0.14)",
+                    fill: true,
+                    tension: 0.25,
+                    pointRadius: 2,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+            },
+        });
+    }
+
+    function barChart(elementId, data, label, color) {
+        const canvas = document.getElementById(elementId);
+        if (!canvas) {
+            return;
+        }
+        new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label,
+                    data: data.data,
+                    backgroundColor: color,
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+            },
+        });
+    }
+
+    lineChart("registrationsChart", payload.registrations, "Registrations", "#0F766E");
+    lineChart("sessionsChart", payload.sessions, "Sessions", "#2563EB");
+    lineChart("snapspeaksChart", payload.snapspeaks, "SnapSpeaks", "#F59E0B");
+    barChart("funnelChart", payload.funnel, "Users", "rgba(15,118,110,0.75)");
+    barChart("pgiDistributionChart", payload.pgi_distribution, "Users", "rgba(37,99,235,0.72)");
+    barChart("contextChart", payload.professional_context, "Users", "rgba(245,158,11,0.72)");
+    barChart("l1Chart", payload.l1_distribution, "Users", "rgba(239,68,68,0.72)");
+    barChart("cohortChart", payload.cohort_improvement, "Median PGI", "rgba(15,118,110,0.72)");
+</script>
+{% endblock %}

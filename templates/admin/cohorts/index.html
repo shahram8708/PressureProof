@@ -1,0 +1,79 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Cohorts - PressureProof Admin{% endblock %}
+
+{% block content %}
+<section>
+    <div class="admin-section-title mb-3">
+        <div>
+            <h1 class="h4 mb-1">Cohort Benchmarks</h1>
+            <p class="text-secondary mb-0">Each cohort key is formed as professional context, L1 language, and proficiency tier.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button id="rebuildBtn" class="btn btn-primary">Rebuild Aggregates</button>
+            <span id="rebuildState" class="small text-secondary align-self-center"></span>
+        </div>
+    </div>
+
+    <div class="admin-table-wrap">
+        <div class="table-responsive">
+            <table class="table admin-table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Cohort Key</th>
+                        <th>User Count</th>
+                        <th>Median PGI</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cohorts %}
+                    <tr>
+                        <td>{{ item.cohort_key }}</td>
+                        <td>{{ item.user_count }}</td>
+                        <td>{{ item.median_pgi if item.median_pgi is not none else 'n/a' }}</td>
+                        <td>{{ item.last_updated | strftime('%d %b %Y %H:%M') if item.last_updated else 'n/a' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-secondary">No cohort aggregates are available yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+
+    document.getElementById("rebuildBtn")?.addEventListener("click", async function () {
+        const state = document.getElementById("rebuildState");
+        state.textContent = "Queueing rebuild...";
+        this.disabled = true;
+
+        try {
+            const response = await fetch("{{ url_for('admin.cohorts_rebuild') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({}),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Failed to queue rebuild");
+            }
+            state.textContent = `Rebuild queued. Task ID: ${payload.task_id}`;
+        } catch (error) {
+            state.textContent = error.message || "Unable to queue task";
+        } finally {
+            this.disabled = false;
+        }
+    });
+</script>
+{% endblock %}

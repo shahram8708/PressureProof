@@ -1,0 +1,84 @@
+# ------------------------------
+# Python bytecode / caches
+# ------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ------------------------------
+# Virtual environments
+# ------------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# ------------------------------
+# Environment and local secrets
+# ------------------------------
+.env
+.env.*
+!.env.example
+
+# ------------------------------
+# Flask / runtime artifacts
+# ------------------------------
+instance/
+app/uploads/
+*.pid
+*.sock
+
+# ------------------------------
+# Local databases
+# ------------------------------
+*.db
+*.sqlite
+*.sqlite3
+pressureproof.db
+
+# ------------------------------
+# Logs
+# ------------------------------
+*.log
+logs/
+
+# ------------------------------
+# Test / coverage / type-check caches
+# ------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+
+# ------------------------------
+# Build / packaging artifacts
+# ------------------------------
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ------------------------------
+# Celery
+# ------------------------------
+celerybeat-schedule
+
+# ------------------------------
+# Notebook / tooling
+# ------------------------------
+.ipynb_checkpoints/
+
+# ------------------------------
+# OS / editor noise
+# ------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

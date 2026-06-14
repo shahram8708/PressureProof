@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}My LSRC - PressureProof{% endblock %}
+
+{% block content %}
+<section class="container-fluid px-0">
+    <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 mb-4">
+        <a href="{{ url_for('lsrc.dashboard', week=previous_week_param) }}" class="btn btn-outline-secondary btn-sm" aria-label="Previous week">&#8592;</a>
+        <button type="button" class="btn btn-outline-secondary btn-sm" disabled>{{ week_label }}</button>
+        {% if can_go_next and next_week_param %}
+            <a href="{{ url_for('lsrc.dashboard', week=next_week_param) }}" class="btn btn-outline-secondary btn-sm" aria-label="Next week">&#8594;</a>
+        {% else %}
+            <button type="button" class="btn btn-outline-secondary btn-sm" disabled aria-label="Next week">&#8594;</button>
+        {% endif %}
+        <a href="{{ url_for('lsrc.dashboard') }}" class="btn btn-primary btn-sm">This week</a>
+    </div>
+
+    {% if not has_data %}
+        <div class="card p-4 text-center">
+            <h2 class="h5 mb-2">No speech data for this week yet.</h2>
+            <p class="text-secondary mb-3">Complete a session or SnapSpeak to see your LSRC.</p>
+            <div>
+                <a href="{{ url_for('sessions.new_session') }}" class="btn btn-primary">Start a session &#8594;</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="card p-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h5 mb-0">Your LSRC Radar</h2>
+                <span class="small text-secondary">Weekly PGI: {% if week_pgi is not none %}{{ week_pgi | round(1) }}{% else %}&mdash;{% endif %}</span>
+            </div>
+            <div class="small mb-3">
+                <span class="me-3"><span class="d-inline-block me-1" style="width:10px;height:10px;background:#4F46E5;"></span>Prepared English</span>
+                <span><span class="d-inline-block me-1" style="width:10px;height:10px;background:#F59E0B;"></span>English Under Pressure</span>
+            </div>
+            <div class="pp-chart-radar-container">
+                <canvas id="lsrcRadarChart" width="500" height="500"></canvas>
+            </div>
+        </div>
+
+        <div class="accordion mb-4" id="lsrcDimensionAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingLexical">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseLexical" aria-expanded="false" aria-controls="collapseLexical">
+                        What do these dimensions mean?
+                    </button>
+                </h2>
+                <div id="collapseLexical" class="accordion-collapse collapse" aria-labelledby="headingLexical" data-bs-parent="#lsrcDimensionAccordion">
+                    <div class="accordion-body">
+                        <p class="mb-2"><strong>Lexical Diversity</strong> tracks how broad your vocabulary remains while speaking. Under stress, range often narrows into repetitive word choice.</p>
+                        <p class="mb-2"><strong>Syntactic Complexity</strong> measures sentence structure complexity. Under pressure, complex constructions often collapse into simpler forms.</p>
+                        <p class="mb-2"><strong>Prosodic Confidence</strong> reflects vocal delivery quality across pitch, pacing, and control. Confident speech sounds stable and intentional.</p>
+                        <p class="mb-2"><strong>Disfluency Rate</strong> tracks fillers and hesitation patterns. This score is inverted, so a higher score means fewer disfluencies and better performance.</p>
+                        <p class="mb-2"><strong>Sentence Completion</strong> measures how often your spoken ideas reach completion without trailing off.</p>
+                        <p class="mb-0"><strong>Recovery Speed</strong> measures how quickly you recover after breakdown events. This displayed score is inverted from raw seconds, so a higher score means faster recovery.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            {% for detail in dimension_details %}
+                <div class="col-12 col-md-6 col-xl-4">
+                    <div class="pp-lsrc-dimension-card h-100">
+                        <div class="pp-dimension-name mb-2">{{ detail.display_name }}</div>
+
+                        {% if detail.dimension_name == 'recovery_speed' %}
+                            <div class="small text-secondary mb-1">Prepared: {% if detail.prepared_seconds is not none %}{{ detail.prepared_seconds | round(1) }}s{% else %}&mdash;{% endif %}</div>
+                            <div class="small text-secondary mb-2">Under pressure: {% if detail.spontaneous_seconds is not none %}{{ detail.spontaneous_seconds | round(1) }}s{% else %}&mdash;{% endif %}</div>
+                        {% else %}
+                            <div class="small text-secondary mb-1">Prepared</div>
+                            <div class="progress mb-2" style="height:7px;">
+                                <div class="progress-bar" role="progressbar" style="width: {{ detail.prepared_score if detail.prepared_score is not none else 0 }}%; background:#4F46E5;"></div>
+                            </div>
+                            <div class="small text-secondary mb-1">Under pressure</div>
+                            <div class="progress mb-2" style="height:7px;">
+                                <div class="progress-bar" role="progressbar" style="width: {{ detail.spontaneous_score if detail.spontaneous_score is not none else 0 }}%; background:#F59E0B;"></div>
+                            </div>
+                        {% endif %}
+
+                        <div class="pp-gap-value mb-2">
+                            {% if detail.gap is not none %}
+                                {% if detail.trend_direction == 'improving' %}
+                                    <span class="pp-trend-improving">&#8595; {{ detail.gap | round(1) }} point gap</span>
+                                {% elif detail.trend_direction == 'declining' %}
+                                    <span class="pp-trend-declining">&#8593; {{ detail.gap | round(1) }} point gap</span>
+                                {% else %}
+                                    <span class="pp-trend-stable">&#8594; {{ detail.gap | round(1) }} point gap</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="pp-trend-stable">Gap available after more samples</span>
+                            {% endif %}
+                        </div>
+
+                        <p class="mb-0 small text-secondary">{{ detail.narrative }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="pp-focus-card">
+            <h2 class="h5 mb-2">This week's focus.</h2>
+            <p class="mb-3 text-secondary">{{ focus_recommendation }}</p>
+            <a href="{{ url_for('sessions.new_session') }}" class="btn btn-primary">Start a targeted session &#8594;</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/lsrc_chart.js') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const radarChartData = {{ radar_chart_data | tojson | safe }};
+            window.initLsrcChart("lsrcRadarChart", radarChartData);
+        });
+    </script>
+{% endblock %}

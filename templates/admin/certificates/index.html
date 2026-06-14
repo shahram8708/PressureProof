@@ -1,0 +1,138 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Certificates - PressureProof Admin{% endblock %}
+
+{% block content %}
+<section>
+    <div class="admin-section-title">
+        <h1 class="h4 mb-0">Certificates</h1>
+        <div class="text-secondary small">Total records: {{ certificates | length }}</div>
+    </div>
+
+    <form method="get" class="admin-toolbar mb-3" action="{{ url_for('admin.certificates_index') }}">
+        <div class="row g-2">
+            <div class="col-md-4">
+                <label class="form-label" for="user">User email or name</label>
+                <input id="user" class="form-control" type="text" name="user" value="{{ request.args.get('user', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="date_from">From date</label>
+                <input id="date_from" class="form-control" type="date" name="date_from" value="{{ request.args.get('date_from', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="date_to">To date</label>
+                <input id="date_to" class="form-control" type="date" name="date_to" value="{{ request.args.get('date_to', '') }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end gap-2">
+                <button class="btn btn-primary" type="submit">Apply</button>
+                <a href="{{ url_for('admin.certificates_index') }}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="admin-table-wrap">
+        <div class="table-responsive">
+            <table class="table admin-table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Generated</th>
+                        <th>PGI Before</th>
+                        <th>PGI After</th>
+                        <th>Improvement</th>
+                        <th>Public</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in certificates %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>
+                            {% if item.user %}
+                            <a href="{{ url_for('admin.users_detail', user_id=item.user.id) }}">{{ item.user.display_name or item.user.email }}</a>
+                            <div class="small text-secondary">{{ item.user.email }}</div>
+                            {% else %}
+                            User #{{ item.user_id }}
+                            {% endif %}
+                        </td>
+                        <td>{{ item.generated_at | strftime('%d %b %Y') if item.generated_at else 'n/a' }}</td>
+                        <td>{{ item.baseline_pgi | round(2) if item.baseline_pgi is not none else 'n/a' }}</td>
+                        <td>{{ item.current_pgi | round(2) if item.current_pgi is not none else 'n/a' }}</td>
+                        <td>{{ item.pgi_improvement_pct | round(2) if item.pgi_improvement_pct is not none else 'n/a' }}%</td>
+                        <td>
+                            {% if item.is_public %}
+                            <span class="admin-pill success">public</span>
+                            {% else %}
+                            <span class="admin-pill neutral">private</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="regenerateCertificate({{ item.id }})">Regenerate</button>
+                            {% if item.is_public %}
+                            <button class="btn btn-sm btn-outline-danger" onclick="revokeCertificate({{ item.id }})">Revoke</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" class="text-center py-4 text-secondary">No certificates found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+
+    async function revokeCertificate(certificateId) {
+        if (!confirm("Revoke public certificate sharing for this record?")) {
+            return;
+        }
+        try {
+            const response = await fetch(`/admin/certificates/${certificateId}/revoke`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({}),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Unable to revoke certificate");
+            }
+            window.location.reload();
+        } catch (error) {
+            alert(error.message || "Revoke failed");
+        }
+    }
+
+    async function regenerateCertificate(certificateId) {
+        if (!confirm("Regenerate certificate PDF for this user?")) {
+            return;
+        }
+        try {
+            const response = await fetch(`/admin/certificates/${certificateId}/regenerate`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({}),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Unable to regenerate certificate");
+            }
+            alert("Certificate regeneration triggered.");
+        } catch (error) {
+            alert(error.message || "Regeneration failed");
+        }
+    }
+</script>
+{% endblock %}

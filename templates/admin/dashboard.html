@@ -1,0 +1,190 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Dashboard - PressureProof{% endblock %}
+
+{% block content %}
+<section class="mb-3">
+    <div class="admin-section-title">
+        <h1 class="h4 mb-0">Operational Dashboard</h1>
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.analytics') }}">Open Analytics</a>
+            {% if admin_user.has_permission('manage_cohorts') %}
+            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.cohorts_index') }}">Manage Cohorts</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="admin-kpi-grid mb-3">
+        <article class="admin-card">
+            <div class="admin-stat-label">Users</div>
+            <div class="admin-stat-value">{{ stats.total_users }}</div>
+            <div class="admin-stat-sub">Verified {{ stats.verified_users }} | Unverified {{ stats.unverified_users }}</div>
+        </article>
+        <article class="admin-card">
+            <div class="admin-stat-label">New Users</div>
+            <div class="admin-stat-value">{{ stats.new_users_week }}</div>
+            <div class="admin-stat-sub">Last 7 days ({{ stats.new_users_month }} in 30 days)</div>
+        </article>
+        <article class="admin-card">
+            <div class="admin-stat-label">Sessions</div>
+            <div class="admin-stat-value">{{ stats.total_sessions }}</div>
+            <div class="admin-stat-sub">{{ stats.sessions_week }} in last 7 days</div>
+        </article>
+        <article class="admin-card">
+            <div class="admin-stat-label">SnapSpeaks</div>
+            <div class="admin-stat-value">{{ stats.total_snapspeaks }}</div>
+            <div class="admin-stat-sub">{{ stats.snapspeaks_week }} in last 7 days</div>
+        </article>
+        <article class="admin-card">
+            <div class="admin-stat-label">Paid Subscriptions</div>
+            <div class="admin-stat-value">{{ stats.total_paid }}</div>
+            <div class="admin-stat-sub">Monthly {{ stats.monthly_subscriptions }} | Annual {{ stats.annual_subscriptions }}</div>
+        </article>
+        <article class="admin-card">
+            <div class="admin-stat-label">Estimated MRR</div>
+            <div class="admin-stat-value">INR {{ stats.estimated_mrr | int }}</div>
+            <div class="admin-stat-sub">Trial conversion {{ stats.trial_conversion_rate }}%</div>
+        </article>
+        <article class="admin-card">
+            <div class="admin-stat-label">Average PGI</div>
+            <div class="admin-stat-value">{{ stats.average_pgi if stats.average_pgi is not none else 'n/a' }}</div>
+            <div class="admin-stat-sub">Sessions per active user {{ stats.average_sessions_per_active_user }}</div>
+        </article>
+        <article class="admin-card">
+            <div class="admin-stat-label">Certificates</div>
+            <div class="admin-stat-value">{{ stats.total_certificates }}</div>
+            <div class="admin-stat-sub">Expiring subscriptions (7d): {{ expiring_subscriptions }}</div>
+        </article>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-7">
+            <div class="admin-card h-100">
+                <h2 class="h6 mb-3">Queue Health</h2>
+                <div class="table-responsive">
+                    <table class="table admin-table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Queue</th>
+                                <th>Backlog</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for queue_name, backlog in queue_health.items() %}
+                            <tr>
+                                <td>{{ queue_name }}</td>
+                                <td>{{ backlog }}</td>
+                                <td>
+                                    {% if backlog == 0 %}
+                                        <span class="admin-pill success">Healthy</span>
+                                    {% elif backlog < 50 %}
+                                        <span class="admin-pill warning">Busy</span>
+                                    {% else %}
+                                        <span class="admin-pill danger">Backlogged</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2 class="h6 mt-4 mb-2">Scheduled Task Last Run</h2>
+                <ul class="list-group list-group-flush">
+                    {% for task_name, ts in last_run.items() %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>{{ task_name.replace('_', ' ') | title }}</span>
+                        <span class="text-secondary small">{{ ts or 'No run recorded' }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="admin-card h-100">
+                <h2 class="h6 mb-3">Failure Signals</h2>
+                <div class="d-grid gap-2">
+                    <div class="d-flex justify-content-between border rounded p-2"><span>Assessment failures</span><strong>{{ failed_analysis.assessments }}</strong></div>
+                    <div class="d-flex justify-content-between border rounded p-2"><span>Session failures</span><strong>{{ failed_analysis.sessions }}</strong></div>
+                    <div class="d-flex justify-content-between border rounded p-2"><span>SnapSpeak failures</span><strong>{{ failed_analysis.snapspeaks }}</strong></div>
+                    <div class="d-flex justify-content-between border rounded p-2"><span>Onboarding complete users</span><strong>{{ stats.onboarding_complete }}</strong></div>
+                    <div class="d-flex justify-content-between border rounded p-2"><span>Active free trials</span><strong>{{ stats.free_trial_users }}</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="admin-table-wrap">
+                <div class="p-3 border-bottom">
+                    <h2 class="h6 mb-0">Recent Admin Activity</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table admin-table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Admin</th>
+                                <th>Action</th>
+                                <th>Target</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in recent_activity %}
+                            <tr>
+                                <td>{{ item.performed_at | strftime('%d %b %H:%M') }}</td>
+                                <td>{{ item.admin.full_name if item.admin else item.admin_id }}</td>
+                                <td>{{ item.action }}</td>
+                                <td>
+                                    {% if item.target_type %}
+                                    {{ item.target_type }} #{{ item.target_id }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-secondary py-3">No audit activity yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="admin-table-wrap">
+                <div class="p-3 border-bottom">
+                    <h2 class="h6 mb-0">Recent Registrations</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table admin-table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Joined</th>
+                                <th>Tier</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_registrations %}
+                            <tr>
+                                <td>
+                                    <div>{{ user.display_name or user.email }}</div>
+                                    <div class="small text-secondary">{{ user.email }}</div>
+                                </td>
+                                <td>{{ user.created_at | strftime('%d %b %Y') }}</td>
+                                <td>{{ user.subscription_tier }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-center text-secondary py-3">No users found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

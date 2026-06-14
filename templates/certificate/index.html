@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Pressure Certificate - PressureProof{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pp-cert-card {
+        border-top: 3px solid #F59E0B;
+    }
+
+    .pp-eligible-card {
+        border-top: 3px solid #F59E0B;
+        background: #FFFBEB;
+    }
+
+    .pp-stat-box {
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        padding: 0.9rem;
+        background: #FFFFFF;
+        text-align: center;
+    }
+
+    .pp-stat-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6B7280;
+        margin-bottom: 0.35rem;
+    }
+
+    .pp-stat-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1E1B4B;
+        line-height: 1.1;
+    }
+
+    .pp-lock-preview {
+        position: relative;
+        border: 1px dashed #D1D5DB;
+        border-radius: 12px;
+        padding: 2rem;
+        background: #F9FAFB;
+        color: #6B7280;
+    }
+
+    .pp-lock-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 12px;
+        font-size: 2rem;
+    }
+
+    .pp-certificate-preview {
+        border: 2px solid #1E1B4B;
+        border-radius: 12px;
+        background: #FFFFFF;
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="container-fluid">
+    <div class="row g-4">
+        {% if not eligibility_data.eligible %}
+        <div class="col-12">
+            <div class="card pp-cert-card p-4">
+                <h1 class="h3 mb-2">Your Pressure Certificate</h1>
+                <p class="text-secondary mb-4">Available after 6 months of consistent training.</p>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Time active: {{ eligibility_data.months_active }} months of 6 required</span>
+                        <span>{{ ((eligibility_data.months_active / 6) * 100) | round(0) | int }}%</span>
+                    </div>
+                    <div class="progress" style="height:10px;background:#F3F4F6;">
+                        <div class="progress-bar" style="width: {{ ((eligibility_data.months_active / 6) * 100) if eligibility_data.months_active < 6 else 100 }}%; background:#F59E0B;"></div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>Sessions completed: {{ eligibility_data.session_count }} of 20 required</span>
+                        <span>{{ ((eligibility_data.session_count / 20) * 100) | round(0) | int }}%</span>
+                    </div>
+                    <div class="progress" style="height:10px;background:#F3F4F6;">
+                        <div class="progress-bar" style="width: {{ ((eligibility_data.session_count / 20) * 100) if eligibility_data.session_count < 20 else 100 }}%; background:#F59E0B;"></div>
+                    </div>
+                </div>
+
+                <p class="mb-4">Keep training. At your current pace, you will be eligible in approximately {{ eligibility_data.weeks_until_eligible or 0 }} weeks.</p>
+
+                <div class="pp-lock-preview">
+                    <h2 class="h5 mb-2">PressureProof Certificate Preview</h2>
+                    <p class="mb-0">Your certificate will include PGI improvement metrics, strongest LSRC dimension gains, cohort percentile rank, and your active training period.</p>
+                    <div class="pp-lock-overlay">&#128274;</div>
+                </div>
+            </div>
+        </div>
+        {% elif existing_certificate %}
+        <div class="col-12">
+            <div class="card p-4">
+                <h1 class="h3 mb-3">Your Pressure Certificate</h1>
+                <div class="pp-certificate-preview">
+                    <div class="row g-3">
+                        <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Baseline PGI</div><div class="pp-stat-value">{{ existing_certificate.baseline_pgi | round(2) if existing_certificate.baseline_pgi is not none else 'n/a' }}</div></div></div>
+                        <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Current PGI</div><div class="pp-stat-value">{{ existing_certificate.current_pgi | round(2) if existing_certificate.current_pgi is not none else 'n/a' }}</div></div></div>
+                        <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Improvement</div><div class="pp-stat-value">{{ existing_certificate.pgi_improvement_pct | round(2) if existing_certificate.pgi_improvement_pct is not none else 'n/a' }}%</div></div></div>
+                        <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Strongest Dimension</div><div class="pp-stat-value">{{ existing_certificate.strongest_dimension or 'n/a' }}</div></div></div>
+                        <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Cohort Percentile</div><div class="pp-stat-value">{{ existing_certificate.cohort_percentile | round(2) if existing_certificate.cohort_percentile is not none else 'n/a' }}</div></div></div>
+                        <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Active Period</div><div class="pp-stat-value">{{ existing_certificate.months_active or 0 }} months</div></div></div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mt-3">
+                    <div class="col-12 col-md-6">
+                        <a class="btn btn-primary w-100" href="{{ url_for('certificate.download') }}">Download PDF</a>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <a class="btn btn-outline-primary w-100" href="https://www.linkedin.com/sharing/share-offsite/?url={{ existing_certificate.share_url | urlencode }}" target="_blank" rel="noopener">Share on LinkedIn</a>
+                    </div>
+                </div>
+
+                <div class="mt-3 text-secondary small">
+                    Certificate generated on {{ existing_certificate.generated_at | strftime('%d %b %Y') }}.
+                    <a href="#" id="regenerateLink">Regenerate</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card pp-eligible-card p-4">
+                <h1 class="h3 mb-2">Your certificate is ready to generate.</h1>
+                {% set data = preview_data.certificate_data if preview_data else {} %}
+                <p class="text-secondary mb-4">Your latest performance metrics are ready for certificate rendering.</p>
+
+                <div class="row g-3">
+                    <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Baseline PGI</div><div class="pp-stat-value">{{ data.get('baseline_pgi') | round(2) if data.get('baseline_pgi') is not none else 'n/a' }}</div></div></div>
+                    <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Current PGI</div><div class="pp-stat-value">{{ data.get('current_pgi') | round(2) if data.get('current_pgi') is not none else 'n/a' }}</div></div></div>
+                    <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Improvement</div><div class="pp-stat-value">{{ data.get('pgi_improvement_pct') | round(2) if data.get('pgi_improvement_pct') is not none else 'n/a' }}%</div></div></div>
+                    <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Strongest Dimension</div><div class="pp-stat-value">{{ data.get('strongest_dimension') or 'n/a' }}</div></div></div>
+                    <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Cohort Percentile</div><div class="pp-stat-value">{{ data.get('cohort_percentile') | round(2) if data.get('cohort_percentile') is not none else 'n/a' }}</div></div></div>
+                    <div class="col-6 col-lg-4"><div class="pp-stat-box"><div class="pp-stat-label">Active Period</div><div class="pp-stat-value">{{ data.get('months_active') or 0 }} months</div></div></div>
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-primary btn-lg" id="generateCertificateBtn">
+                        <span id="generateLabel">Generate My Certificate</span>
+                        <span id="generateSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+
+                <div id="generatedActions" class="row g-2 mt-3 d-none">
+                    <div class="col-12 col-md-6">
+                        <a id="downloadBtn" class="btn btn-primary w-100" href="#">Download PDF</a>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <a id="shareBtn" class="btn btn-outline-primary w-100" href="#" target="_blank" rel="noopener">Share on LinkedIn</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+        const generateBtn = document.getElementById("generateCertificateBtn");
+        const regenerateLink = document.getElementById("regenerateLink");
+
+        async function runGeneration() {
+            const spinner = document.getElementById("generateSpinner");
+            const label = document.getElementById("generateLabel");
+            if (spinner) spinner.classList.remove("d-none");
+            if (label) label.textContent = "Generating";
+            if (generateBtn) generateBtn.disabled = true;
+
+            try {
+                const response = await fetch("{{ url_for('api.api_generate_certificate') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                    credentials: "same-origin",
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || "Certificate generation failed.");
+                }
+
+                const actions = document.getElementById("generatedActions");
+                const downloadBtn = document.getElementById("downloadBtn");
+                const shareBtn = document.getElementById("shareBtn");
+
+                if (actions) actions.classList.remove("d-none");
+                if (downloadBtn) downloadBtn.href = data.download_url;
+                if (shareBtn) {
+                    shareBtn.href = "https://www.linkedin.com/sharing/share-offsite/?url=" + encodeURIComponent(data.share_url);
+                }
+
+                window.location.reload();
+            } catch (error) {
+                alert(error.message || "Certificate generation failed.");
+            } finally {
+                if (spinner) spinner.classList.add("d-none");
+                if (label) label.textContent = "Generate My Certificate";
+                if (generateBtn) generateBtn.disabled = false;
+            }
+        }
+
+        if (generateBtn) {
+            generateBtn.addEventListener("click", function () {
+                runGeneration();
+            });
+        }
+
+        if (regenerateLink) {
+            regenerateLink.addEventListener("click", function (event) {
+                event.preventDefault();
+                runGeneration();
+            });
+        }
+    })();
+</script>
+{% endblock %}

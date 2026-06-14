@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Session Summary - PressureProof{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/session.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    {% if is_processing %}
+        <div class="card p-4 w-100">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="spinner-border text-warning" role="status" aria-hidden="true"></div>
+                <h2 class="h5 mb-0">Analyzing your session...</h2>
+            </div>
+            <p class="text-secondary mb-3">We are transcribing and scoring your speech now. This page updates automatically.</p>
+            <div class="progress" style="height: 10px;">
+                <div id="processingProgressBar" class="progress-bar" role="progressbar" style="width: 8%;" aria-valuemin="0" aria-valuemax="100" aria-valuenow="8"></div>
+            </div>
+        </div>
+    {% else %}
+        {% set session_type_map = {
+            'vocabulary_pressure': 'Vocabulary Pressure Session',
+            'distractor_challenge': 'Distractor Challenge Session',
+            'prosodic_drill': 'Prosodic Drill Session',
+            'recovery_focus': 'Recovery Focus Session',
+            'baseline_measurement': 'Baseline Measurement Session'
+        } %}
+        {% set session_type_display = session_type_map.get(session.session_type, 'Training Session') %}
+
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <div>
+                <span class="badge" style="background:#1E1B4B; color:#FFFFFF;">{{ session_type_display }}</span>
+                <h1 class="h3 mt-2 mb-1">{{ session.session_number_label }}</h1>
+                <p class="text-secondary mb-0">
+                    {{ session.completed_at | strftime('%d %b %Y, %I:%M %p') }}
+                    {% if total_duration_seconds %}
+                        <span class="mx-1">|</span>
+                        {{ total_duration_seconds }} seconds
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body p-0">
+                <table class="table mb-0 session-summary-score-table">
+                    <thead>
+                        <tr>
+                            <th>Dimension</th>
+                            <th>This Session</th>
+                            <th>Your Baseline</th>
+                            <th>Change</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in dimension_rows %}
+                            <tr>
+                                <td>{{ row.label }}</td>
+                                <td>
+                                    {% if row.session_value is not none %}
+                                        {% if row.display == 'seconds' %}
+                                            {{ '%.1f'|format(row.session_value) }}s
+                                        {% else %}
+                                            {{ '%.0f'|format(row.session_value) }}
+                                        {% endif %}
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if row.baseline_value is not none %}
+                                        {% if row.display == 'seconds' %}
+                                            {{ '%.1f'|format(row.baseline_value) }}s
+                                        {% else %}
+                                            {{ '%.0f'|format(row.baseline_value) }}
+                                        {% endif %}
+                                    {% else %}
+                                        --
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if row.change is none %}
+                                        <span class="text-secondary">--</span>
+                                    {% elif row.trend == 'improved' %}
+                                        <span class="pp-score-improved">
+                                            ↑
+                                            {% if row.display == 'seconds' %}
+                                                {{ '%.1f'|format(row.change|abs) }}s
+                                            {% else %}
+                                                {{ '%.0f'|format(row.change|abs) }}
+                                            {% endif %}
+                                        </span>
+                                    {% elif row.trend == 'declined' %}
+                                        <span class="pp-score-declined">
+                                            ↓
+                                            {% if row.display == 'seconds' %}
+                                                {{ '%.1f'|format(row.change|abs) }}s
+                                            {% else %}
+                                                {{ '%.0f'|format(row.change|abs) }}
+                                            {% endif %}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-secondary">→ 0</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Composite</th>
+                            <th>{% if session_composite is not none %}{{ '%.1f'|format(session_composite) }}{% else %}--{% endif %}</th>
+                            <th>{% if baseline_composite is not none %}{{ '%.1f'|format(baseline_composite) }}{% else %}--{% endif %}</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        {% if injection_events %}
+            <div class="card mb-4" style="border-left:4px solid #F59E0B;">
+                <div class="card-body">
+                    <h2 class="h5 mb-2">What happened when the {{ injection_type_display }} hit.</h2>
+                    <p class="mb-0">{{ injection_analysis_text }}</p>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if audio_url %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Review your session audio.</h2>
+                    <audio controls preload="metadata" class="w-100">
+                        <source src="{{ audio_url }}">
+                        Your browser does not support audio playback.
+                    </audio>
+                    {% if audio_download_url %}
+                        <div class="mt-3">
+                            <a class="btn btn-outline-primary" href="{{ audio_download_url }}">Download audio</a>
+                        </div>
+                    {% endif %}
+                    <div class="session-audio-timeline mt-4">
+                        <span
+                            class="session-audio-injection-marker"
+                            style="left: {{ injection_marker_left }}%;"
+                            data-label="Injection fired at {{ session.injection_timestamp_seconds }} seconds"
+                        ></span>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="card mb-4" style="border-left:4px solid #1E1B4B;">
+            <div class="card-body">
+                <h2 class="h5 mb-2">Key insight.</h2>
+                <p class="mb-0">{{ key_insight }}</p>
+            </div>
+        </div>
+
+        <div class="card mb-4" style="background:#FEF3C7; border:1px solid #F59E0B;">
+            <div class="card-body">
+                <h2 class="h5 mb-2">Your next session.</h2>
+                <p class="mb-3">
+                    Based on this session, your next recommended track is <strong>{{ next_session_display }}</strong>.
+                    Continue now to keep adaptation momentum while this feedback is fresh.
+                </p>
+                <a href="{{ url_for('sessions.new_session') }}" class="btn btn-primary mb-2">Schedule next session →</a>
+                <div>
+                    <a href="{{ url_for('snapspeak.capture') }}">Or, take a SnapSpeak challenge now →</a>
+                </div>
+            </div>
+        </div>
+
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if is_processing %}
+<script>
+    (function () {
+        const statusUrl = "{{ status_poll_url }}";
+        const progressBar = document.getElementById("processingProgressBar");
+        let visualProgress = 8;
+
+        const smoothTimer = window.setInterval(() => {
+            visualProgress = Math.min(95, visualProgress + 2);
+            progressBar.style.width = `${visualProgress}%`;
+            progressBar.setAttribute("aria-valuenow", String(visualProgress));
+        }, 1000);
+
+        async function checkStatus() {
+            const response = await fetch(statusUrl, {
+                method: "GET",
+                credentials: "same-origin",
+                headers: {
+                    Accept: "application/json"
+                }
+            });
+
+            const payload = await response.json();
+            if (!response.ok) {
+                return;
+            }
+
+            if (payload.status === "processing") {
+                const progress = Number(payload.progress || visualProgress);
+                visualProgress = Math.max(visualProgress, Math.min(99, progress));
+                progressBar.style.width = `${visualProgress}%`;
+                progressBar.setAttribute("aria-valuenow", String(visualProgress));
+                return;
+            }
+
+            window.clearInterval(smoothTimer);
+
+            if (payload.status === "completed") {
+                if (payload.redirect) {
+                    window.location.assign(payload.redirect);
+                } else {
+                    window.location.reload();
+                }
+                return;
+            }
+
+            if (payload.status === "failed") {
+                progressBar.classList.add("bg-danger");
+            }
+        }
+
+        checkStatus();
+        window.setInterval(checkStatus, 3000);
+    })();
+</script>
+{% endif %}
+{% endblock %}

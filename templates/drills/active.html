@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% set hide_sidebar = True %}
+{% set no_sidebar = True %}
+
+{% block title %}{{ drill.title }} - Recovery Drill - PressureProof{% endblock %}
+
+{% block content %}
+<section class="container-fluid py-4">
+    <div class="mx-auto" style="max-width:860px;">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('sessions.drills_library') }}" class="text-decoration-none">Drills</a></li>
+                <li class="breadcrumb-item">{{ drill.category }}</li>
+                <li class="breadcrumb-item active" aria-current="page">{{ drill.title }}</li>
+            </ol>
+        </nav>
+
+        <article class="card mb-3">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-2">
+                    <h1 class="h3 mb-0">{{ drill.title }}</h1>
+                    <span class="badge" style="background:#1E1B4B; color:#FFFFFF;">{{ drill.category }}</span>
+                </div>
+                <div class="mb-2">
+                    {% for level in range(1, 6) %}
+                        <span style="display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; border:1px solid #D1D5DB; background:{% if level <= drill.difficulty_level %}#F59E0B{% else %}#FFFFFF{% endif %};"></span>
+                    {% endfor %}
+                </div>
+                <p class="text-secondary mb-3">{{ drill.description }}</p>
+
+                <div class="accordion" id="drillHowItWorksAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingHowItWorks">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHowItWorks" aria-expanded="false" aria-controls="collapseHowItWorks">How this drill works</button>
+                        </h2>
+                        <div id="collapseHowItWorks" class="accordion-collapse collapse" aria-labelledby="headingHowItWorks" data-bs-parent="#drillHowItWorksAccordion">
+                            <div class="accordion-body small text-secondary">
+                                The drill plays a prompt through browser text to speech. You respond while recording. At a random moment, a freeze cue fires. The system captures cue timing and estimates recovery speed after analysis.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="card mb-3">
+            <div class="card-body p-4">
+                <h2 class="h6 mb-3">Recovery phrases for this drill type:</h2>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for phrase in filler_phrases %}
+                        <code style="background:#F3F4F6; border-radius:8px; padding:0.5rem 0.75rem; color:#111827; font-size:13px;">{{ phrase }}</code>
+                    {% endfor %}
+                </div>
+            </div>
+        </article>
+
+        <article class="card">
+            <div class="card-body p-4">
+                <div id="drillStateReady" class="drill-state is-active text-center">
+                    <button id="startDrillBtn" type="button" class="btn btn-primary btn-lg px-4">Start drill</button>
+                    <p class="text-secondary small mt-2 mb-0">Your microphone will be used to record your response.</p>
+                </div>
+
+                <div id="drillStateListening" class="drill-state text-center">
+                    <div class="small text-secondary mb-2">Listen to the prompt...</div>
+                    <h3 class="h5 mb-2" id="listeningPromptText">{{ drill.description }}</h3>
+                    <div class="d-flex justify-content-center align-items-end gap-1 mb-2" aria-hidden="true">
+                        <span class="wave" style="width:6px; height:10px; background:#F59E0B; border-radius:3px; animation: wavePulse 1s infinite;"></span>
+                        <span class="wave" style="width:6px; height:18px; background:#F59E0B; border-radius:3px; animation: wavePulse 1s 0.1s infinite;"></span>
+                        <span class="wave" style="width:6px; height:24px; background:#F59E0B; border-radius:3px; animation: wavePulse 1s 0.2s infinite;"></span>
+                        <span class="wave" style="width:6px; height:16px; background:#F59E0B; border-radius:3px; animation: wavePulse 1s 0.3s infinite;"></span>
+                        <span class="wave" style="width:6px; height:11px; background:#F59E0B; border-radius:3px; animation: wavePulse 1s 0.4s infinite;"></span>
+                    </div>
+                    <div id="ttsFallbackHint" class="small text-secondary d-none">Read this prompt aloud if your browser does not support speech synthesis.</div>
+                </div>
+
+                <div id="drillStateSpeaking" class="drill-state">
+                    <div id="drillPromptPanel" class="p-3 rounded" style="background:#F9FAFB; border:1px solid #E5E7EB; transition: background 0.3s ease;">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                            <h3 class="h5 mb-0" style="color:#B45309;">Your turn, respond now</h3>
+                            <span id="drillTimer" class="badge bg-light text-secondary">90s</span>
+                        </div>
+                        <p class="mb-2" style="font-size:20px; line-height:1.75; color:#1E1B4B;" id="speakingPromptText">{{ drill.description }}</p>
+                        <div class="d-flex align-items-end gap-1 mb-2" aria-hidden="true">
+                            <span class="wave" style="width:6px; height:10px; background:#F59E0B; border-radius:3px; animation: wavePulse 1s infinite;"></span>
+                            <span class="wave" style="width:6px; height:18px; background:#F59E0B; border-radius:3px; animation: wavePulse 1s 0.1s infinite;"></span>
+                            <span class="wave" style="width:6px; height:24px; background:#F59E0B; border-radius:3px; animation: wavePulse 1s 0.2s infinite;"></span>
+                            <span class="wave" style="width:6px; height:16px; background:#F59E0B; border-radius:3px; animation: wavePulse 1s 0.3s infinite;"></span>
+                            <span class="wave" style="width:6px; height:11px; background:#F59E0B; border-radius:3px; animation: wavePulse 1s 0.4s infinite;"></span>
+                        </div>
+                        <div id="freezeCueText" class="small fw-semibold" style="color:#B45309; opacity:0; transition: opacity 0.25s ease;">[ pause ]</div>
+                    </div>
+                </div>
+
+                <div id="drillStateRecorded" class="drill-state text-center">
+                    <div class="spinner-border" role="status" style="color:#1E1B4B;"></div>
+                    <h3 class="h6 mt-3 mb-0">Drill complete. Analyzing your response...</h3>
+                </div>
+
+                <div id="drillStateResult" class="drill-state">
+                    <h3 class="h5 mb-2">Drill complete</h3>
+                    <p class="mb-1" id="resultFreezeCueLine">Freeze cue fired at 0.0 seconds.</p>
+                    <p class="mb-1" id="resultRecoveryLine">Post-cue fluent resumption: measured after analysis.</p>
+                    <p class="text-secondary mb-3" id="resultFeedbackLine">Repeat the drill to tighten recovery speed.</p>
+
+                    <div class="d-flex flex-wrap gap-2">
+                        <button id="tryAgainBtn" type="button" class="btn btn-primary">Try again</button>
+                        <a href="{{ url_for('sessions.drills_library') }}" class="btn btn-outline-secondary">Back to drills</a>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/audio_recorder.js') }}"></script>
+<script>
+    const drillPromptText = {{ drill.description | tojson | safe }};
+    const freezeCueTiming = {{ freeze_cue_timing }};
+    const drillId = {{ drill.id }};
+    const csrfToken = "{{ csrf_token() }}";
+    const drillSessionId = {{ drill_session.id }};
+    const completeUrl = "{{ url_for('sessions.complete_drill', drill_id=drill.id) }}";
+
+    (function () {
+        const TOTAL_DURATION_SECONDS = 90;
+
+        const states = {
+            ready: document.getElementById('drillStateReady'),
+            listening: document.getElementById('drillStateListening'),
+            speaking: document.getElementById('drillStateSpeaking'),
+            recorded: document.getElementById('drillStateRecorded'),
+            result: document.getElementById('drillStateResult'),
+        };
+
+        const startDrillBtn = document.getElementById('startDrillBtn');
+        const tryAgainBtn = document.getElementById('tryAgainBtn');
+        const drillTimer = document.getElementById('drillTimer');
+        const freezeCueText = document.getElementById('freezeCueText');
+        const drillPromptPanel = document.getElementById('drillPromptPanel');
+        const ttsFallbackHint = document.getElementById('ttsFallbackHint');
+        const resultFreezeCueLine = document.getElementById('resultFreezeCueLine');
+        const resultRecoveryLine = document.getElementById('resultRecoveryLine');
+        const resultFeedbackLine = document.getElementById('resultFeedbackLine');
+
+        let recorder = null;
+        let sessionStartPerf = 0;
+        let freezeCueTimestampSeconds = 0;
+        let timerInterval = null;
+        let freezeCueTimer = null;
+        let stopTimer = null;
+        let speechFinished = false;
+
+        function showState(name) {
+            Object.values(states).forEach((state) => state.classList.remove('is-active'));
+            if (states[name]) {
+                states[name].classList.add('is-active');
+            }
+        }
+
+        function clearRuntimeTimers() {
+            if (timerInterval) window.clearInterval(timerInterval);
+            if (freezeCueTimer) window.clearTimeout(freezeCueTimer);
+            if (stopTimer) window.clearTimeout(stopTimer);
+            timerInterval = null;
+            freezeCueTimer = null;
+            stopTimer = null;
+        }
+
+        function pathwayForCategory(categoryName) {
+            const normalized = (categoryName || '').toLowerCase();
+            if (normalized.includes('filler')) {
+                return 'filler_bridging';
+            }
+            if (normalized.includes('semantic')) {
+                return 'semantic_substitution';
+            }
+            return 'reformulation';
+        }
+
+        function startListeningState() {
+            showState('listening');
+            speechFinished = false;
+
+            if (!('speechSynthesis' in window) || !window.SpeechSynthesisUtterance) {
+                ttsFallbackHint.classList.remove('d-none');
+                window.setTimeout(startSpeakingState, 2200);
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(drillPromptText);
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            utterance.lang = 'en-US';
+            utterance.onend = () => {
+                speechFinished = true;
+                startSpeakingState();
+            };
+            utterance.onerror = () => {
+                if (!speechFinished) {
+                    ttsFallbackHint.classList.remove('d-none');
+                    startSpeakingState();
+                }
+            };
+
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function triggerFreezeCue() {
+            freezeCueTimestampSeconds = Math.max(0, (performance.now() - sessionStartPerf) / 1000);
+            freezeCueText.style.opacity = '1';
+            drillPromptPanel.style.background = '#FEF3C7';
+            window.setTimeout(() => {
+                drillPromptPanel.style.background = '#F9FAFB';
+            }, 320);
+        }
+
+        function startSpeakingState() {
+            showState('speaking');
+            freezeCueText.style.opacity = '0';
+            drillTimer.textContent = `${TOTAL_DURATION_SECONDS}s`;
+            sessionStartPerf = performance.now();
+
+            recorder = new window.AudioRecorder({
+                chunkInterval: 95000,
+                onError: () => {
+                    showState('result');
+                    resultFeedbackLine.textContent = 'Microphone error occurred. Please try this drill again.';
+                },
+                onStop: (blob) => {
+                    handleRecordedBlob(blob);
+                },
+            });
+
+            recorder.start().then(() => {
+                let remaining = TOTAL_DURATION_SECONDS;
+                timerInterval = window.setInterval(() => {
+                    remaining -= 1;
+                    drillTimer.textContent = `${Math.max(0, remaining)}s`;
+                }, 1000);
+
+                freezeCueTimer = window.setTimeout(() => {
+                    triggerFreezeCue();
+                }, freezeCueTiming * 1000);
+
+                stopTimer = window.setTimeout(() => {
+                    clearRuntimeTimers();
+                    if (recorder) {
+                        recorder.stop();
+                    }
+                }, TOTAL_DURATION_SECONDS * 1000);
+            }).catch(() => {
+                showState('result');
+                resultFeedbackLine.textContent = 'Microphone permission is required to run this drill.';
+            });
+        }
+
+        async function handleRecordedBlob(blob) {
+            showState('recorded');
+
+            const formData = new FormData();
+            formData.append('audio', blob, `drill_${drillId}_${Date.now()}.webm`);
+            formData.append('freeze_cue_timestamp_seconds', freezeCueTimestampSeconds.toFixed(2));
+            formData.append('drill_id', String(drillId));
+            formData.append('session_id', String(drillSessionId));
+            formData.append('pathway_used', pathwayForCategory('{{ drill.category }}'));
+            formData.append('csrf_token', csrfToken);
+
+            try {
+                const response = await fetch(completeUrl, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                    },
+                });
+                const payload = await response.json();
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.error || 'Unable to complete this drill.');
+                }
+
+                showState('result');
+                resultFreezeCueLine.textContent = `Freeze cue fired at ${Number(payload.freeze_cue_timestamp_seconds || freezeCueTimestampSeconds).toFixed(1)} seconds.`;
+                resultRecoveryLine.textContent = `Post-cue fluent resumption estimate: ${Number(payload.recovery_time || 0).toFixed(2)} seconds.`;
+                resultFeedbackLine.textContent = payload.message || 'Post-cue fluent resumption: measured after analysis.';
+            } catch (error) {
+                showState('result');
+                resultFreezeCueLine.textContent = `Freeze cue fired at ${freezeCueTimestampSeconds.toFixed(1)} seconds.`;
+                resultRecoveryLine.textContent = 'Post-cue fluent resumption: measured after analysis.';
+                resultFeedbackLine.textContent = error.message || 'Unable to complete this drill.';
+            }
+        }
+
+        startDrillBtn.addEventListener('click', () => {
+            startListeningState();
+        });
+
+        tryAgainBtn.addEventListener('click', () => {
+            window.location.reload();
+        });
+
+        window.addEventListener('beforeunload', () => {
+            clearRuntimeTimers();
+            if (recorder) {
+                recorder.stop();
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+        });
+    })();
+</script>
+
+<style>
+    .drill-state {
+        display: none;
+    }
+
+    .drill-state.is-active {
+        display: block;
+    }
+
+    @keyframes wavePulse {
+        0%,
+        100% {
+            transform: scaleY(0.4);
+            opacity: 0.6;
+        }
+        50% {
+            transform: scaleY(1);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}

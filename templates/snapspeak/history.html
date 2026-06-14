@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}SnapSpeak History - PressureProof{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/snapspeak.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="snapspeak-history-page container-fluid px-0">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-1">SnapSpeak History</h1>
+            <p class="text-secondary mb-0">Review spontaneous captures, annotate context tags, and watch trend signals over time.</p>
+        </div>
+        <a href="{{ url_for('snapspeak.capture') }}" class="btn btn-primary">New SnapSpeak &#8594;</a>
+    </div>
+
+    <div class="snapspeak-filter mb-3">
+        <a href="{{ url_for('snapspeak.history') }}" class="btn btn-sm {% if not active_tag_filter %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill me-1 mb-1">All</a>
+        <a href="{{ url_for('snapspeak.history', tag='work') }}" class="btn btn-sm {% if active_tag_filter == 'work' %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill me-1 mb-1">Work</a>
+        <a href="{{ url_for('snapspeak.history', tag='casual') }}" class="btn btn-sm {% if active_tag_filter == 'casual' %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill me-1 mb-1">Casual</a>
+        <a href="{{ url_for('snapspeak.history', tag='preparation') }}" class="btn btn-sm {% if active_tag_filter == 'preparation' %}btn-primary{% else %}btn-outline-secondary{% endif %} rounded-pill mb-1">Preparation</a>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <div class="snapspeak-stat-pill">Total SnapSpeaks: {{ all_snapspeaks_count }}</div>
+        <div class="snapspeak-stat-pill">This week: {{ this_week_count }}</div>
+        <div class="snapspeak-stat-pill">
+            Average recovery speed trend:
+            {% if trend_direction == 'improving' %}
+                &#8595;
+            {% elif trend_direction == 'slower' %}
+                &#8593;
+            {% else %}
+                &#8594;
+            {% endif %}
+        </div>
+    </div>
+
+    {% if snapspeaks|length == 0 %}
+        <div class="card snapspeak-empty-card text-center p-4">
+            <div class="mb-3" style="font-size:2rem; color:#1E1B4B;">&#127908;</div>
+            <h2 class="h5 mb-2">
+                {% if active_tag_filter %}
+                    No {{ active_tag_filter }} SnapSpeaks yet
+                {% else %}
+                    No SnapSpeaks yet
+                {% endif %}
+            </h2>
+            <p class="text-secondary mb-3">Random SnapSpeak challenges build your real-world speaking profile. Enable notifications in your profile or launch one manually.</p>
+            <div>
+                <a href="{{ url_for('snapspeak.capture') }}" class="btn btn-primary">Launch a SnapSpeak &#8594;</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="d-flex flex-column gap-3">
+            {% for snap in snapspeaks %}
+                <article class="snapspeak-history-card p-3" data-snapspeak-id="{{ snap.id }}">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                        <div class="small text-secondary">{{ snap.captured_at | strftime('%a, %d %b · %I:%M %p') }}</div>
+                        <div class="d-flex align-items-center flex-wrap gap-1">
+                            {% if snap.context_tag == 'work' %}
+                                <span class="badge rounded-pill" style="background:#F59E0B; color:#111827;">Work</span>
+                            {% elif snap.context_tag == 'casual' %}
+                                <span class="badge rounded-pill border" style="color:#1E1B4B; border-color:#1E1B4B !important;">Casual</span>
+                            {% elif snap.context_tag == 'preparation' %}
+                                <span class="badge rounded-pill bg-light text-secondary">Preparation</span>
+                            {% endif %}
+
+                            {% if snap.is_notable and snap.notable_annotation %}
+                                <span class="snapspeak-notable-badge">&#127942; {{ snap.notable_annotation }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <p class="snapspeak-prompt-compact clamped" id="prompt-{{ snap.id }}">{{ snap.prompt_text }}</p>
+                    {% if snap.prompt_text and snap.prompt_text|length > 110 %}
+                        <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none prompt-toggle" data-target="prompt-{{ snap.id }}">Show more</button>
+                    {% endif %}
+
+                    <div class="mt-2">
+                        <div class="snapspeak-analysis-mini">
+                            <span class="snapspeak-analysis-square" style="background:#F59E0B;"></span>
+                            <span>{{ snap.analysis_line_1 or 'Vocabulary range analysis unavailable for this record.' }}</span>
+                        </div>
+                        <div class="snapspeak-analysis-mini">
+                            <span class="snapspeak-analysis-square" style="background:#4F46E5;"></span>
+                            <span>{{ snap.analysis_line_2 or 'Pause pattern analysis unavailable for this record.' }}</span>
+                        </div>
+                        <div class="snapspeak-analysis-mini mb-0">
+                            <span class="snapspeak-analysis-square" style="background:#9CA3AF;"></span>
+                            <span>{{ snap.analysis_line_3 or 'Baseline comparison unavailable for this record.' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        {% if not snap.context_tag %}
+                            <div class="d-flex flex-wrap gap-1">
+                                <button type="button" class="btn btn-sm btn-outline-secondary snap-tag-btn" data-tag="work">Tag this: Work</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary snap-tag-btn" data-tag="casual">Casual</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary snap-tag-btn" data-tag="preparation">Preparation</button>
+                            </div>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+
+        <nav aria-label="SnapSpeak pagination" class="mt-4">
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{% if page > 1 %}{% if active_tag_filter %}{{ url_for('snapspeak.history', tag=active_tag_filter, page=page-1) }}{% else %}{{ url_for('snapspeak.history', page=page-1) }}{% endif %}{% else %}#{% endif %}">Previous</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">Page {{ page }} of {{ total_pages }}</span></li>
+                <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{% if page < total_pages %}{% if active_tag_filter %}{{ url_for('snapspeak.history', tag=active_tag_filter, page=page+1) }}{% else %}{{ url_for('snapspeak.history', page=page+1) }}{% endif %}{% else %}#{% endif %}">Next</a>
+                </li>
+            </ul>
+        </nav>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
+
+        document.querySelectorAll(".prompt-toggle").forEach((button) => {
+            button.addEventListener("click", () => {
+                const targetId = button.dataset.target;
+                const target = document.getElementById(targetId);
+                if (!target) {
+                    return;
+                }
+
+                target.classList.toggle("clamped");
+                button.textContent = target.classList.contains("clamped") ? "Show more" : "Show less";
+            });
+        });
+
+        document.querySelectorAll(".snapspeak-history-card").forEach((card) => {
+            const snapId = card.dataset.snapspeakId;
+            card.querySelectorAll(".snap-tag-btn").forEach((button) => {
+                button.addEventListener("click", async () => {
+                    const tag = button.dataset.tag;
+                    try {
+                        const response = await fetch(`/api/snapspeak/${snapId}/tag`, {
+                            method: "POST",
+                            credentials: "same-origin",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": csrfToken,
+                            },
+                            body: JSON.stringify({ tag }),
+                        });
+                        const payload = await response.json();
+                        if (!response.ok) {
+                            throw new Error(payload.error || "Unable to tag this SnapSpeak.");
+                        }
+                        window.location.reload();
+                    } catch (error) {
+                        console.warn(error.message);
+                    }
+                });
+            });
+        });
+    })();
+</script>
+{% endblock %}

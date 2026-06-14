@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% set hide_sidebar = True %}
+{% set no_sidebar = True %}
+
+{% block title %}About PressureProof{% endblock %}
+
+{% block content %}
+<section class="py-5 bg-white">
+    <div class="container" style="max-width: 900px;">
+        <h1 class="mb-4">About PressureProof</h1>
+        <p>PressureProof exists for professionals and test takers who can demonstrate strong English in low stress environments but experience measurable breakdowns when cognitive pressure rises. Most language products optimize for vocabulary growth and grammar drills. PressureProof focuses on deployment reliability under stress, because that is where careers, admissions, and immigration outcomes are decided.</p>
+        <p>Our methodology is grounded in applied psycholinguistics and performance science. We model speech degradation patterns across lexical access, response latency, coherence, and repair behavior. We then train those weak points with calibrated stress exposure so performance improves not only in practice sessions but also in unpredictable real world conversations.</p>
+        <p>We are building this product for the global majority of English users who operate in English as an additional language. PressureProof respects that multilingual speakers do not need another confidence slogan. They need clear diagnostics, targeted interventions, and proof that transfer is happening outside the classroom.</p>
+
+        <div class="row g-4 mt-2">
+            <div class="col-md-4">
+                <div class="card h-100 p-4">
+                    <h2 class="h5">Measure the gap</h2>
+                    <p class="mb-0">Quantify the distance between calm condition performance and pressure condition performance.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 p-4">
+                    <h2 class="h5">Train the bottleneck</h2>
+                    <p class="mb-0">Apply controlled stress injections to build stable speech retrieval under realistic demand.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 p-4">
+                    <h2 class="h5">Verify transfer</h2>
+                    <p class="mb-0">Track spontaneous speech quality in daily life to confirm that gains persist beyond training sessions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

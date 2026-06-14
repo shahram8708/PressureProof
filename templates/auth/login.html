@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% set hide_sidebar = True %}
+{% set no_sidebar = True %}
+
+{% block title %}Welcome back{% endblock %}
+
+{% block content %}
+<section class="py-5" style="background: #F9FAFB; min-height: calc(100vh - 64px);">
+    <div class="container py-4">
+        <div class="card mx-auto shadow-lg border-0" style="max-width: 420px; border-radius: 16px;">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <h2 class="h3 mb-0">Welcome back.</h2>
+                </div>
+
+                <form method="post" action="{{ url_for('auth.login_post') }}" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="form-floating mb-3">
+                        {{ form.email(class="form-control", id="email", placeholder="name@example.com") }}
+                        <label for="email">Email</label>
+                    </div>
+                    {% for error in form.email.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+
+                    <div class="form-floating mb-2">
+                        {{ form.password(class="form-control", id="password", placeholder="Password") }}
+                        <label for="password">Password</label>
+                    </div>
+                    {% for error in form.password.errors %}<div class="text-danger small mb-2">{{ error }}</div>{% endfor %}
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="form-check">
+                            {{ form.remember_me(class="form-check-input", id="rememberMe") }}
+                            <label class="form-check-label" for="rememberMe">Remember me</label>
+                        </div>
+                        <a href="{{ url_for('auth.forgot_password_get') }}" class="small">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Log in.</button>
+                    <p class="text-center mt-3 mb-0">New to PressureProof? <a href="{{ url_for('auth.register_get') }}">Create an account</a>.</p>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

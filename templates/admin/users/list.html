@@ -1,0 +1,245 @@
+{% extends "admin/base.html" %}
+
+{% macro page_url(page_num) -%}
+{{ url_for(
+    'admin.users_list',
+    page=page_num,
+    search=filters.search,
+    subscription_tier=filters.subscription_tier,
+    email_verified=filters.email_verified,
+    onboarding_complete=filters.onboarding_complete,
+    country=filters.country,
+    l1_language=filters.l1_language,
+    professional_context=filters.professional_context,
+    date_from=filters.date_from,
+    date_to=filters.date_to,
+    sort_by=filters.sort_by
+) }}
+{%- endmacro %}
+
+{% block title %}User Management - PressureProof Admin{% endblock %}
+
+{% block content %}
+<section>
+    <div class="admin-section-title">
+        <h1 class="h4 mb-0">User Management</h1>
+        <div class="text-secondary small">{{ pagination.total }} users matched</div>
+    </div>
+
+    <form class="admin-toolbar mb-3" method="get" action="{{ url_for('admin.users_list') }}">
+        <div class="row g-2">
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label" for="search">Search</label>
+                <input id="search" class="form-control" type="text" name="search" value="{{ filters.search }}" placeholder="Email or display name">
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label" for="subscription_tier">Subscription</label>
+                <select id="subscription_tier" class="form-select" name="subscription_tier">
+                    <option value="all" {% if filters.subscription_tier == 'all' %}selected{% endif %}>All</option>
+                    <option value="free" {% if filters.subscription_tier == 'free' %}selected{% endif %}>Free</option>
+                    <option value="professional" {% if filters.subscription_tier == 'professional' %}selected{% endif %}>Professional</option>
+                    <option value="pro_annual" {% if filters.subscription_tier == 'pro_annual' %}selected{% endif %}>Pro Annual</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label" for="email_verified">Email</label>
+                <select id="email_verified" class="form-select" name="email_verified">
+                    <option value="all" {% if filters.email_verified == 'all' %}selected{% endif %}>All</option>
+                    <option value="verified" {% if filters.email_verified == 'verified' %}selected{% endif %}>Verified</option>
+                    <option value="unverified" {% if filters.email_verified == 'unverified' %}selected{% endif %}>Unverified</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label" for="onboarding_complete">Onboarding</label>
+                <select id="onboarding_complete" class="form-select" name="onboarding_complete">
+                    <option value="all" {% if filters.onboarding_complete == 'all' %}selected{% endif %}>All</option>
+                    <option value="complete" {% if filters.onboarding_complete == 'complete' %}selected{% endif %}>Complete</option>
+                    <option value="incomplete" {% if filters.onboarding_complete == 'incomplete' %}selected{% endif %}>Incomplete</option>
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label" for="country">Country</label>
+                <select id="country" class="form-select" name="country">
+                    <option value="">All countries</option>
+                    {% for item in countries %}
+                    <option value="{{ item }}" {% if filters.country == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label" for="l1_language">L1 Language</label>
+                <select id="l1_language" class="form-select" name="l1_language">
+                    <option value="">All languages</option>
+                    {% for item in l1_languages %}
+                    <option value="{{ item }}" {% if filters.l1_language == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label" for="professional_context">Context</label>
+                <select id="professional_context" class="form-select" name="professional_context">
+                    <option value="">All contexts</option>
+                    {% for item in contexts %}
+                    <option value="{{ item }}" {% if filters.professional_context == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label" for="date_from">Joined from</label>
+                <input id="date_from" class="form-control" type="date" name="date_from" value="{{ filters.date_from }}">
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label" for="date_to">Joined to</label>
+                <input id="date_to" class="form-control" type="date" name="date_to" value="{{ filters.date_to }}">
+            </div>
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label" for="sort_by">Sort by</label>
+                <select id="sort_by" class="form-select" name="sort_by">
+                    <option value="created_at" {% if filters.sort_by == 'created_at' %}selected{% endif %}>Created At</option>
+                    <option value="last_login" {% if filters.sort_by == 'last_login' %}selected{% endif %}>Last Login</option>
+                    <option value="session_count" {% if filters.sort_by == 'session_count' %}selected{% endif %}>Session Count</option>
+                    <option value="current_pgi" {% if filters.sort_by == 'current_pgi' %}selected{% endif %}>Current PGI</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-6 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <a href="{{ url_for('admin.users_list') }}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="admin-table-wrap mb-3">
+        <div class="table-responsive">
+            <table class="table admin-table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Country / L1</th>
+                        <th>Joined</th>
+                        <th>Tier</th>
+                        <th>Email</th>
+                        <th>Onboarding</th>
+                        <th>Sessions</th>
+                        <th>Current PGI</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>
+                            <div class="fw-semibold">{{ user.display_name or user.email }}</div>
+                            <div class="small text-secondary">{{ user.email }}</div>
+                        </td>
+                        <td>
+                            <div>{{ user.country or 'Unknown' }}</div>
+                            <div class="small text-secondary">{{ user.l1_language or 'Unknown' }}</div>
+                        </td>
+                        <td>
+                            <div>{{ user.created_at | strftime('%d %b %Y') }}</div>
+                            <div class="small text-secondary">{{ user.last_login_at | strftime('%d %b %Y') if user.last_login_at else 'No login' }}</div>
+                        </td>
+                        <td>
+                            {% if user.subscription_tier in ['professional', 'pro_annual'] %}
+                            <span class="admin-pill success">{{ user.subscription_tier }}</span>
+                            {% else %}
+                            <span class="admin-pill neutral">free</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.email_verified %}
+                            <span class="admin-pill success">Verified</span>
+                            {% else %}
+                            <span class="admin-pill warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.onboarding_complete %}
+                            <span class="admin-pill success">Complete</span>
+                            {% else %}
+                            <span class="admin-pill warning">Incomplete</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ session_map.get(user.id, 0) }}</td>
+                        <td>{{ pgi_map.get(user.id, 'n/a') }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.users_detail', user_id=user.id) }}">View</a>
+                            {% if admin_user.has_permission('edit_users') %}
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.users_edit_get', user_id=user.id) }}">Edit</a>
+                            {% endif %}
+                            {% if admin_user.role == 'super_admin' %}
+                            <a class="btn btn-sm btn-outline-success" href="{{ url_for('admin.users_impersonate', user_id=user.id) }}">Impersonate</a>
+                            {% endif %}
+                            {% if admin_user.has_permission('delete_users') %}
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteUser({{ user.id }}, '{{ user.email }}')">Delete</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10" class="text-center py-4 text-secondary">No users match the current filters.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <nav aria-label="User list pagination">
+        <ul class="pagination">
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="{{ page_url(pagination.prev_num) if pagination.has_prev else '#' }}">Previous</a>
+            </li>
+
+            {% for p in pagination.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
+                {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ page_url(p) }}">{{ p }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{{ page_url(pagination.next_num) if pagination.has_next else '#' }}">Next</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+
+    async function deleteUser(userId, email) {
+        const confirmation = window.prompt("Type the user email to confirm deletion:", "");
+        if (!confirmation) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/admin/users/${userId}/delete`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({ confirm: confirmation }),
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Unable to delete user");
+            }
+            window.location.reload();
+        } catch (error) {
+            alert(error.message || "Deletion failed");
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "admin/base.html" %}
+
+{% macro page_url(page_num) -%}
+{{ url_for(
+    'admin.sessions_list',
+    page=page_num,
+    user_id=request.args.get('user_id', ''),
+    session_type=request.args.get('session_type', ''),
+    status=request.args.get('status', ''),
+    injection_type=request.args.get('injection_type', ''),
+    early_exit=request.args.get('early_exit', ''),
+    date_from=request.args.get('date_from', ''),
+    date_to=request.args.get('date_to', '')
+) }}
+{%- endmacro %}
+
+{% block title %}Sessions - PressureProof Admin{% endblock %}
+
+{% block content %}
+<section>
+    <div class="admin-section-title">
+        <h1 class="h4 mb-0">Training Sessions</h1>
+        <div class="text-secondary small">{{ pagination.total }} sessions matched</div>
+    </div>
+
+    <form method="get" class="admin-toolbar mb-3" action="{{ url_for('admin.sessions_list') }}">
+        <div class="row g-2">
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label" for="user_id">User ID</label>
+                <input class="form-control" id="user_id" type="number" name="user_id" value="{{ request.args.get('user_id', '') }}">
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label" for="session_type">Session Type</label>
+                <input class="form-control" id="session_type" type="text" name="session_type" value="{{ request.args.get('session_type', '') }}">
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label" for="status">Status</label>
+                <input class="form-control" id="status" type="text" name="status" value="{{ request.args.get('status', '') }}">
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label" for="injection_type">Injection Type</label>
+                <input class="form-control" id="injection_type" type="text" name="injection_type" value="{{ request.args.get('injection_type', '') }}">
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label" for="early_exit">Early Exit</label>
+                <select class="form-select" id="early_exit" name="early_exit">
+                    <option value="">All</option>
+                    <option value="true" {% if request.args.get('early_exit') == 'true' %}selected{% endif %}>Yes</option>
+                    <option value="false" {% if request.args.get('early_exit') == 'false' %}selected{% endif %}>No</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label" for="date_from">Date From</label>
+                <input class="form-control" id="date_from" type="date" name="date_from" value="{{ request.args.get('date_from', '') }}">
+            </div>
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label" for="date_to">Date To</label>
+                <input class="form-control" id="date_to" type="date" name="date_to" value="{{ request.args.get('date_to', '') }}">
+            </div>
+            <div class="col-lg-2 col-md-4 d-flex align-items-end gap-2">
+                <button class="btn btn-primary" type="submit">Apply</button>
+                <a href="{{ url_for('admin.sessions_list') }}" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="admin-table-wrap mb-3">
+        <div class="table-responsive">
+            <table class="table admin-table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Created</th>
+                        <th>Type</th>
+                        <th>Injection</th>
+                        <th>Status</th>
+                        <th>Early Exit</th>
+                        <th>LSRC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sessions %}
+                    {% set item_user = users_map.get(item.user_id) %}
+                    <tr>
+                        <td>{{ item.id }}</td>
+                        <td>
+                            {% if item_user %}
+                            <a href="{{ url_for('admin.users_detail', user_id=item_user.id) }}">{{ item_user.display_name or item_user.email }}</a>
+                            <div class="small text-secondary">#{{ item.user_id }}</div>
+                            {% else %}
+                            #{{ item.user_id }}
+                            {% endif %}
+                        </td>
+                        <td>{{ item.created_at | strftime('%d %b %Y %H:%M') }}</td>
+                        <td>{{ item.session_type }}</td>
+                        <td>{{ item.stress_injection_type }} ({{ item.stress_injection_intensity | round(2) }})</td>
+                        <td>
+                            {% if item.status == 'completed' %}
+                            <span class="admin-pill success">completed</span>
+                            {% elif item.status == 'failed' %}
+                            <span class="admin-pill danger">failed</span>
+                            {% else %}
+                            <span class="admin-pill warning">{{ item.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.early_exit_reason or ('Yes' if item.early_exit else 'No') }}</td>
+                        <td>{{ session_lsrc_map.get(item.id, 'n/a') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-secondary">No sessions found for this filter set.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <nav aria-label="Session list pagination">
+        <ul class="pagination">
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="{{ page_url(pagination.prev_num) if pagination.has_prev else '#' }}">Previous</a>
+            </li>
+            {% for p in pagination.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
+                {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ page_url(p) }}">{{ p }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{{ page_url(pagination.next_num) if pagination.has_next else '#' }}">Next</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</section>
+{% endblock %}

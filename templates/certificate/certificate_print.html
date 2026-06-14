@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>PressureProof Certificate</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            color: #1F2937;
+            background: #FFFFFF;
+        }
+
+        .certificate-page {
+            position: relative;
+            min-height: 257mm;
+            border: 3px solid #1E1B4B;
+            padding: 14mm;
+            box-sizing: border-box;
+        }
+
+        .top-band {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8mm;
+            background: #F59E0B;
+        }
+
+        .content {
+            margin-top: 10mm;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 12mm;
+        }
+
+        .brand {
+            font-size: 28px;
+            color: #1E1B4B;
+            letter-spacing: 0.4px;
+            margin-bottom: 4mm;
+        }
+
+        .brand .pressure {
+            font-weight: 700;
+        }
+
+        .brand .proof {
+            font-weight: 400;
+        }
+
+        .title {
+            font-size: 14px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #1E1B4B;
+            font-weight: 600;
+        }
+
+        .body {
+            text-align: center;
+            margin-bottom: 10mm;
+            line-height: 1.6;
+        }
+
+        .body .lead {
+            font-size: 12px;
+            color: #6B7280;
+            margin-bottom: 4mm;
+        }
+
+        .name {
+            font-size: 32px;
+            color: #1E1B4B;
+            font-weight: 700;
+            margin-bottom: 4mm;
+        }
+
+        .statement {
+            font-size: 14px;
+            color: #4B5563;
+            max-width: 130mm;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: table;
+            width: 100%;
+            border-spacing: 4mm 4mm;
+            margin-bottom: 10mm;
+        }
+
+        .stats-row {
+            display: table-row;
+        }
+
+        .stat {
+            display: table-cell;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 4mm;
+            text-align: center;
+            width: 33.33%;
+            vertical-align: middle;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6B7280;
+            margin-bottom: 2mm;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1E1B4B;
+        }
+
+        .footer {
+            border-top: 2px solid #F59E0B;
+            padding-top: 4mm;
+            text-align: center;
+            color: #6B7280;
+            line-height: 1.5;
+        }
+
+        .footer .line-1 {
+            font-size: 10px;
+            margin-bottom: 1.5mm;
+        }
+
+        .footer .line-2,
+        .footer .line-3 {
+            font-size: 9px;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate-page">
+        <div class="top-band"></div>
+        <div class="content">
+            <div class="header">
+                <div class="brand"><span class="pressure">Pressure</span><span class="proof">Proof</span></div>
+                <div class="title">Certificate of Performance Improvement</div>
+            </div>
+
+            <div class="body">
+                <div class="lead">This certifies that</div>
+                <div class="name">{{ user.display_name or user.email.split('@')[0] }}</div>
+                <div class="statement">has demonstrated measurable improvement in English performance under cognitive stress</div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stats-row">
+                    <div class="stat">
+                        <div class="stat-label">Baseline PGI</div>
+                        <div class="stat-value">{{ certificate_data.baseline_pgi | round(2) if certificate_data.baseline_pgi is not none else 'n/a' }}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Final PGI</div>
+                        <div class="stat-value">{{ certificate_data.current_pgi | round(2) if certificate_data.current_pgi is not none else 'n/a' }}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Improvement</div>
+                        <div class="stat-value">{{ certificate_data.pgi_improvement_pct | round(2) if certificate_data.pgi_improvement_pct is not none else 'n/a' }}%</div>
+                    </div>
+                </div>
+                <div class="stats-row">
+                    <div class="stat">
+                        <div class="stat-label">Strongest Dimension</div>
+                        <div class="stat-value">{{ certificate_data.strongest_dimension or 'n/a' }}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Cohort Percentile</div>
+                        <div class="stat-value">{{ certificate_data.cohort_percentile | round(2) if certificate_data.cohort_percentile is not none else 'n/a' }}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Active Period</div>
+                        <div class="stat-value">{{ certificate_data.months_active or 0 }} months</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <div class="line-1">PressureProof - Pressure Testing English Since 2026</div>
+                <div class="line-2">{{ url_for('certificate.public_share', token=certificate_data.linkedin_share_token, _external=True) }}</div>
+                <div class="line-3">Generated on {{ certificate_data.date_range_end.strftime('%d %b %Y') if certificate_data.date_range_end else '' }}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
