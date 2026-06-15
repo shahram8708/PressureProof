@@ -23,3 +23,4 @@ weasyprint
 numpy
 razorpay
 pydub
+pyaudioop
