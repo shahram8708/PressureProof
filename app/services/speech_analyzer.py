@@ -3,10 +3,8 @@ import os
 import tempfile
 import shutil
 
-import opensmile
-import whisper
+import importlib
 from flask import current_app, has_app_context
-from pydub import AudioSegment
 
 
 logger = logging.getLogger(__name__)
@@ -69,8 +67,14 @@ def _configure_ffmpeg_backend():
     if not ffmpeg_path:
         return False
 
-    AudioSegment.converter = ffmpeg_path
-    AudioSegment.ffmpeg = ffmpeg_path
+    try:
+        pydub = importlib.import_module("pydub")
+        AudioSegment = getattr(pydub, "AudioSegment", None)
+        if AudioSegment is not None:
+            AudioSegment.converter = ffmpeg_path
+            AudioSegment.ffmpeg = ffmpeg_path
+    except Exception:
+        logger.debug("pydub not available to configure ffmpeg backend", exc_info=True)
 
     ffmpeg_dir = os.path.dirname(ffmpeg_path)
     if ffmpeg_dir and ffmpeg_dir not in os.environ.get("PATH", ""):
@@ -95,6 +99,12 @@ def get_whisper_model():
     if _whisper_model is not None:
         return _whisper_model
 
+    try:
+        whisper = importlib.import_module("whisper")
+    except Exception:
+        logger.warning("Whisper package is not available; skipping model load.")
+        return None
+
     for model_size in _get_whisper_model_candidates():
         try:
             _whisper_model = whisper.load_model(model_size, in_memory=False)
@@ -115,10 +125,15 @@ def get_whisper_model():
 def get_smile_instance():
     global _smile_instance
     if _smile_instance is None:
-        _smile_instance = opensmile.Smile(
-            feature_set=opensmile.FeatureSet.ComParE_2016,
-            feature_level=opensmile.FeatureLevel.Functionals,
-        )
+        try:
+            opensmile = importlib.import_module("opensmile")
+            _smile_instance = opensmile.Smile(
+                feature_set=opensmile.FeatureSet.ComParE_2016,
+                feature_level=opensmile.FeatureLevel.Functionals,
+            )
+        except Exception:
+            logger.warning("OpenSMILE is not available; audio features will be unavailable.", exc_info=True)
+            _smile_instance = None
     return _smile_instance
 
 
@@ -127,9 +142,14 @@ def convert_audio_to_wav(input_path: str) -> str:
     os.close(fd)
 
     _configure_ffmpeg_backend()
-
-    audio_segment = AudioSegment.from_file(input_path)
-    audio_segment.export(wav_path, format="wav")
+    try:
+        pydub = importlib.import_module("pydub")
+        AudioSegment = getattr(pydub, "AudioSegment")
+        audio_segment = AudioSegment.from_file(input_path)
+        audio_segment.export(wav_path, format="wav")
+    except Exception:
+        logger.exception("Unable to convert audio to wav; ensure pydub and ffmpeg are available.")
+        raise
     return wav_path
 
 

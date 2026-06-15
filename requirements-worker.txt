@@ -1,0 +1,16 @@
+# Heavy ML / audio processing dependencies for the worker process.
+# Install these only on a separate worker service (not the web service).
+openai-whisper
+spacy
+weasyprint
+pydub
+opensmile
+librosa
+scikit-learn
+numpy
+torch
+ffmpeg-python
+imageio-ffmpeg
+soundfile
+# Optional tools for local development/testing
+pytest
