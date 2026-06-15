@@ -19,3 +19,4 @@ pywebpush
 Pillow
 itsdangerous
 email-validator
+weasyprint
