@@ -22,3 +22,4 @@ email-validator
 weasyprint
 numpy
 razorpay
+pydub
