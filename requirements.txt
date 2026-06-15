@@ -21,3 +21,4 @@ itsdangerous
 email-validator
 weasyprint
 numpy
+razorpay
