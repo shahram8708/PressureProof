@@ -2,66 +2,17 @@ import logging
 import re
 from statistics import mean
 
-import importlib
-import string
+import spacy
 
 
 logger = logging.getLogger(__name__)
 
-# Lazy loader for the spaCy model. Do NOT import spaCy at module import time.
-_nlp = None
-
-
-def _get_nlp():
-    global _nlp
-    if _nlp is not None:
-        return _nlp
-    try:
-        spacy = importlib.import_module("spacy")
-        try:
-            model = spacy.load("en_core_web_sm")
-        except Exception:
-            model = spacy.blank("en")
-            if "sentencizer" not in model.pipe_names:
-                model.add_pipe("sentencizer")
-        _nlp = model
-    except Exception:
-        # Minimal fallback NLP that provides only the attributes used by this module.
-        class SimpleToken:
-            def __init__(self, text):
-                self.text = text
-                self.lemma_ = re.sub(r"[^\\w']", "", text).lower()
-                self.is_alpha = self.lemma_.isalpha() if self.lemma_ else False
-                self.is_punct = all(ch in string.punctuation for ch in text)
-                self.is_space = text.isspace()
-                self.pos_ = "NOUN" if self.is_alpha else ""
-                self.dep_ = ""
-
-        class SimpleDoc:
-            def __init__(self, text):
-                self.text = text or ""
-                self._tokens = [SimpleToken(t) for t in re.findall(r"\\w+|[^\\w\\s]", self.text)]
-                self.sents = [type("S", (), {"text": s})() for s in re.split(r'(?<=[.!?])\\s+', self.text) if s.strip()]
-
-            def __iter__(self):
-                return iter(self._tokens)
-
-            def __len__(self):
-                return len(self._tokens)
-
-            def __getitem__(self, idx):
-                return self._tokens[idx]
-
-        def _fallback(text):
-            return SimpleDoc(text)
-
-        _nlp = _fallback
-
-    return _nlp
-
-
-def _nlp_callable(text):
-    return _get_nlp()(text)
+try:
+    _nlp = spacy.load("en_core_web_sm")
+except Exception:
+    _nlp = spacy.blank("en")
+    if "sentencizer" not in _nlp.pipe_names:
+        _nlp.add_pipe("sentencizer")
 
 
 FILLER_WORDS = {
@@ -121,7 +72,7 @@ def compute_lexical_diversity(transcript: str, baseline_mattr: float = None) -> 
     if not transcript:
         return 0.0
 
-    doc = _nlp_callable(transcript)
+    doc = _nlp(transcript)
     lemmas = []
     for token in doc:
         if token.is_alpha:
@@ -154,7 +105,7 @@ def compute_syntactic_complexity(transcript: str) -> float:
     if not transcript:
         return 0.0
 
-    doc = _nlp_callable(transcript)
+    doc = _nlp(transcript)
     sentences = list(doc.sents)
     if not sentences:
         return 0.0
@@ -230,7 +181,7 @@ def compute_sentence_completion(word_timestamps: list, transcript: str) -> float
             utterances.append(" ".join(current_words).strip())
 
     if not utterances and transcript:
-        utterances = [sent.text.strip() for sent in _nlp_callable(transcript).sents if sent.text.strip()]
+        utterances = [sent.text.strip() for sent in _nlp(transcript).sents if sent.text.strip()]
 
     if not utterances:
         return 70.0
@@ -244,7 +195,7 @@ def compute_sentence_completion(word_timestamps: list, transcript: str) -> float
         if len(words) < 3:
             continue
 
-        doc = _nlp_callable(utterance)
+        doc = _nlp(utterance)
         meaningful = [token for token in doc if not token.is_punct and not token.is_space]
         if not meaningful:
             continue

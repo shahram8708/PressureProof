@@ -1,9 +1,4 @@
-# Minimal runtime requirements for the web service.
-# Heavy ML/audio packages are placed in requirements-worker.txt
 flask
-gunicorn
-celery
-redis
 flask-login
 flask-sqlalchemy
 flask-migrate
@@ -12,15 +7,25 @@ flask-bcrypt
 flask-mail
 flask-limiter
 flask-talisman
-python-dotenv
-psycopg2-binary
-boto3
+celery
+redis
+openai-whisper
+spacy
 pywebpush
-Pillow
-itsdangerous
-email-validator
-weasyprint
-numpy
+boto3
 razorpay
+weasyprint
 pydub
-pyaudioop
+python-dotenv
+gunicorn
+psycopg2-binary
+itsdangerous
+pytest
+opensmile
+librosa
+scikit-learn
+numpy
+torch
+ffmpeg-python
+email-validator
+Pillow
